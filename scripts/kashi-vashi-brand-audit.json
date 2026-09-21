@@ -1,0 +1,176 @@
+{
+  "timestamp": "2026-09-13T16:32:35.147Z",
+  "phase": "PROMPT 9.19 — KASHI-VASHI COMPLETE BRANDING UPDATE",
+  "brandUpdate": {
+    "oldBrand": [
+      "Varanasi Yatra",
+      "Banaras Yatra",
+      "VaranasiYatra",
+      "BanarasYatra"
+    ],
+    "newBrand": "Kashi-Vashi",
+    "tagline": "Authentic Pilgrimages & Bespoke Spiritual Journeys"
+  },
+  "favicon": {
+    "sourceAsset": "src/assets/logo.png",
+    "status": "SUCCESS",
+    "description": "Reused existing logo artwork without generating new art. Copied directly to public favicon & manifest assets.",
+    "generatedAssets": [
+      {
+        "path": "public/favicon.png",
+        "purpose": "Standard browser favicon link"
+      },
+      {
+        "path": "public/favicon.ico",
+        "purpose": "Legacy browser fallback"
+      },
+      {
+        "path": "public/logo.png",
+        "purpose": "Web manifest icon & Apple Touch Icon"
+      },
+      {
+        "path": "public/manifest.json",
+        "purpose": "PWA/Web app manifest with Kashi-Vashi brand name"
+      }
+    ],
+    "htmlUpdates": {
+      "file": "index.html",
+      "changes": [
+        "Replaced <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" /> with /favicon.png",
+        "Added <link rel=\"apple-touch-icon\" href=\"/logo.png\" />",
+        "Added <link rel=\"manifest\" href=\"/manifest.json\" />",
+        "Updated <title> to 'Kashi-Vashi | Authentic Pilgrimages & Bespoke Tours'",
+        "Updated og:title and twitter:title to 'Kashi-Vashi | Authentic Pilgrimages & Bespoke Tours'"
+      ]
+    }
+  },
+  "filesModified": {
+    "totalFilesModified": 58,
+    "categories": {
+      "publicUiAndPages": [
+        "src/shared/config/brand.js",
+        "src/public/seo/SEO.jsx",
+        "src/public/seo/schemas.js",
+        "src/public/components/PublicHeader.jsx",
+        "src/public/components/PublicFooter.jsx",
+        "src/public/components/ImageWithSkeleton.jsx",
+        "src/public/components/FloatingSupport.jsx",
+        "src/public/components/QuickTripPlanner.jsx",
+        "src/public/components/ai/AssistantHandoff.jsx",
+        "src/public/components/ai/AssistantInput.jsx",
+        "src/public/components/ai/CustomerAssistant.jsx",
+        "src/public/pages/AboutPage.jsx",
+        "src/public/pages/ContactPage.jsx",
+        "src/public/pages/HomePage.jsx",
+        "src/public/pages/PlanYourTripPage.jsx",
+        "src/public/pages/HotelsPage.jsx",
+        "src/public/pages/TravelGuideHubPage.jsx",
+        "src/public/pages/DestinationsHubPage.jsx",
+        "src/public/pages/ToursHubPage.jsx",
+        "src/public/pages/NotFoundPage.jsx",
+        "src/public/pages/ExperiencesHubPage.jsx",
+        "src/public/pages/PartnerQRPage.jsx",
+        "src/public/pages/AreaQRLanding.jsx",
+        "src/public/pages/DestinationDetailPage.jsx",
+        "src/public/pages/ExperienceDetailPage.jsx",
+        "src/public/pages/TourDetailPage.jsx",
+        "src/public/pages/TravelGuideDetailPage.jsx"
+      ],
+      "staticLegalPages": [
+        "public/404.html",
+        "public/500.html",
+        "public/cookies.html",
+        "public/disclaimer.html",
+        "public/privacy.html",
+        "public/refunds.html",
+        "public/terms.html"
+      ],
+      "crmAndWorkspaces": [
+        "src/components/crm/auth/CRMLoginScreen.jsx",
+        "src/components/crm/shell/CRMSidebar.jsx",
+        "src/components/crm/ceo/CEOCommandCenter.jsx",
+        "src/components/crm/ceo/qr/QRPreviewModal.jsx",
+        "src/components/crm/manager/ManagerOperationsCenter.jsx",
+        "src/components/crm/dashboard/ManagerOperationsCenter.jsx",
+        "src/components/crm/shared/LeadProfileDrawer.jsx",
+        "src/components/crm/shared/BookingDetailsDrawer.jsx",
+        "src/components/crm/shared/AISalesAssistantPanel.jsx",
+        "src/components/crm/shared/QuoteBuilderModal.jsx",
+        "src/components/crm/communication/CustomerCommunicationWorkspace.jsx",
+        "src/components/crm/customer/Customer360Workspace.jsx",
+        "src/components/crm/team-leader/TeamLeaderWorkspace.jsx",
+        "src/components/crm/team-member/TeamMemberWorkspace.jsx",
+        "src/components/crm/ceo/HotelPartnerWorkspace.jsx",
+        "src/constants/phase4Constants.js",
+        "src/utils/quoteCalculator.js",
+        "src/public/utils/attribution.js",
+        "src/public/utils/analytics.js",
+        "src/components/crm/ui/designTokens.js",
+        "src/utils/dateUtils.js"
+      ],
+      "backendModules": [
+        "backend/documents/documentTemplates.js",
+        "backend/functions/documents/documentTemplates.js",
+        "backend/automation/messageTemplates.js",
+        "backend/functions/automation/messageTemplates.js",
+        "backend/modules/ai/customerAssistantRoutes.js",
+        "backend/modules/ai/customerAssistantService.js",
+        "backend/modules/ai/salesAssistantService.js",
+        "backend/modules/ai/aiTools.js",
+        "backend/modules/ai/knowledgeBase.js",
+        "backend/modules/ai/aiService.js",
+        "backend/server.js",
+        "backend/functions/index.js",
+        "backend/scripts/preflightProduction.js"
+      ]
+    }
+  },
+  "technicalReferencesPreserved": [
+    {
+      "category": "Domain & Hosting URL",
+      "value": "https://varanasiyatra.com",
+      "reason": "Explicit instruction: Do NOT change the current Vercel URL or domain configuration. Do NOT deploy."
+    },
+    {
+      "category": "Official Admin Logins",
+      "value": "ceo@banarasyatra.com, manager@banarasyatra.com",
+      "reason": "Authentication credentials and user database accounts must remain intact to prevent login lockout."
+    },
+    {
+      "category": "Customer Support Email",
+      "value": "info.varanasi.yatra@gmail.com",
+      "reason": "Live Gmail account linked to business mailbox; prompt explicitly requires preserving contact details."
+    },
+    {
+      "category": "Instagram Handle",
+      "value": "@info.varanasi.yatra",
+      "reason": "Live social handle preserved per prompt instructions."
+    },
+    {
+      "category": "Contact Numbers",
+      "value": "+91 84005 54029 (Calling) & +91 81497 83494 (WhatsApp)",
+      "reason": "Verified live phone numbers preserved."
+    },
+    {
+      "category": "Geographic Names",
+      "value": "Varanasi, Kashi, Kashi Vishwanath, Sarnath, Assi Ghat, Ganga Aarti",
+      "reason": "City, sacred shrines, and geographic landmarks retained in destination itineraries, travel guides, and SEO keywords."
+    },
+    {
+      "category": "Prompt Documentation Comments",
+      "value": "Varanasi Yatra Platform — Prompt X",
+      "reason": "Internal developer docstrings and architecture history headers."
+    }
+  ],
+  "buildValidation": {
+    "command": "npm run build",
+    "status": "PASS",
+    "exitCode": 0,
+    "viteVersion": "8.1.4",
+    "modulesTransformed": 161,
+    "distIndexHtmlGzip": "0.85 kB",
+    "distBundleJsGzip": "82.67 kB",
+    "errors": []
+  },
+  "summary": "Completed comprehensive rebrand to Kashi-Vashi across all visible UI components, customer assistants, documents, PDFs, static HTML pages, CRM dashboards, and notification templates. Reused original logo asset for favicon and PWA manifest. Preserved all external credentials and domain configurations safely."
+}

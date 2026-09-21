@@ -1,0 +1,188 @@
+{
+  "auditMetadata": {
+    "prompt": "Prompt 9.13 — AI + QR Production Alignment & Workflow Freeze",
+    "timestamp": "2026-09-12T06:48:00.000Z",
+    "businessName": "Varanasi Yatra",
+    "environment": "staging",
+    "targetVerdict": "B. Ready After Critical Fixes (Staging Verified 100%, SMTP Config Required for Production)",
+    "auditVersion": "1.0.0"
+  },
+  "verdict": {
+    "status": "READY_AFTER_CRITICAL_FIXES",
+    "code": "B",
+    "summary": "All 21 production alignment and workflow freeze requirements have been resolved, verified, and locked. Commercial logic enforces dynamic vendor quoting for Transport/Drivers, Voice AI is disabled, autonomous outreach is strictly prohibited, developer prompt labels have been removed, authentication token exposure is hardened, and MongoDB schema duplicate index warnings have been eliminated. Production deployment is pending external SMTP email provider configuration and custom domain DNS binding."
+  },
+  "testResults": {
+    "total": 21,
+    "passed": 21,
+    "failed": 0,
+    "passRate": "100%",
+    "suites": [
+      {
+        "name": "Commercial & Resource Rules",
+        "passed": 4,
+        "failed": 0,
+        "details": [
+          "Transport default is VENDOR_QUOTE_REQUIRED",
+          "Hotel retains SELLING_PRICE reference model",
+          "Boat retains SELLING_PRICE reference model",
+          "QuoteBuilder defaults Transport to VENDOR_QUOTE_REQUIRED"
+        ]
+      },
+      {
+        "name": "CEO AI Control Center Business Terminology",
+        "passed": 4,
+        "failed": 0,
+        "details": [
+          "Prompt 5 Foundation badge removed",
+          "Prompt 7/8 implementation strings removed from module flags",
+          "Voice AI clearly marked Future Module (Disabled)",
+          "Prompt 9 Engine label cleaned in Opportunity Queue"
+        ]
+      },
+      {
+        "name": "Authentication & Security Hardening",
+        "passed": 4,
+        "failed": 0,
+        "details": [
+          "CEO Login via /admin/login",
+          "Manager Login via /admin/login",
+          "Forgot password declares deliveryStatus: SMTP_NOT_CONFIGURED",
+          "Server does not log plaintext reset tokens"
+        ]
+      },
+      {
+        "name": "RBAC & Financial Data Privacy",
+        "passed": 3,
+        "failed": 0,
+        "details": [
+          "Manager blocked from CEO Dashboard (403)",
+          "Manager Dashboard strips internal costs/margins",
+          "Enquiries list strips vendor cost and company margin for Manager"
+        ]
+      },
+      {
+        "name": "Dynamic QR Network & Attribution",
+        "passed": 4,
+        "failed": 0,
+        "details": [
+          "Public Hotel Concierge resolves /public/partners/hotel-taj-ganges",
+          "Invalid QR safely returns 404 without crashing",
+          "AreaSchema code duplicate index removed",
+          "QRRecordSchema qrId duplicate index removed"
+        ]
+      },
+      {
+        "name": "AI Invariants & Safe Mode",
+        "passed": 2,
+        "failed": 0,
+        "details": [
+          "Safe Mode is strictly ACTIVE",
+          "Voice AI module is strictly DISABLED"
+        ]
+      }
+    ]
+  },
+  "aiModules": {
+    "salesAssistant": {
+      "status": "OPERATIONAL",
+      "humanGated": true,
+      "autonomousOutreach": false,
+      "role": "Internal CRM drafting assistant for Manager & Sales Agents. Suggests recommendations, draft messages, and itinerary suggestions. Zero automated dispatch."
+    },
+    "customerHunter": {
+      "status": "OPERATIONAL",
+      "humanGated": true,
+      "autonomousOutreach": false,
+      "role": "Passive opportunity ingestion, deduplication, scoring, and recommendation engine. Feeds CEO/Manager Opportunity Queue. Manager explicitly promotes prospects into Enquiries."
+    },
+    "voiceAi": {
+      "status": "DISABLED_FUTURE",
+      "humanGated": true,
+      "autonomousOutreach": false,
+      "policy": "Strictly disabled in AIConfig and UI. Reserved for future interactive voice booking post-production stabilization."
+    },
+    "feedbackAndReviews": {
+      "status": "DISABLED_FUTURE",
+      "humanGated": true,
+      "policy": "Zero automated customer feedback or Google Review solicitation in current phase."
+    }
+  },
+  "commercialRules": {
+    "transportAndDrivers": {
+      "model": "VENDOR_QUOTE_REQUIRED",
+      "costEnforcement": "DYNAMIC_VENDOR_DISCOVERY",
+      "rationale": "Varanasi Yatra does not own vehicle inventory. Rates depend on real-time vehicle category, date, driver availability, and route. Default cost is 0 until vendor quotation is confirmed."
+    },
+    "hotels": {
+      "model": "SELLING_PRICE",
+      "costEnforcement": "REFERENCE_COMMISSION_TIERS",
+      "rationale": "Standard reference markup or negotiated hotel contracted tariff."
+    },
+    "boats": {
+      "model": "SELLING_PRICE",
+      "costEnforcement": "MARKUP_OVER_COST",
+      "rationale": "Pre-negotiated ghat boat vendor relationships with fixed reference rates."
+    },
+    "quoteMarginProtection": {
+      "customerVisibility": "Selling Price Only",
+      "costVisibility": "Strictly Internal (CEO and authorized Manager views)",
+      "pdfSanitization": "Zero internal costs, profit calculations, or vendor margins are rendered in customer quotes or PDF exports."
+    }
+  },
+  "rbacHierarchy": {
+    "CEO": {
+      "level": 1,
+      "privileges": "Full Master Control: Revenue, Gross Margins, Net Profit, AI Global Configuration, Emergency Stop, Safe Mode, Dynamic QR Management, Staff Management"
+    },
+    "MANAGER": {
+      "level": 2,
+      "privileges": "Operational Supervision: Leads, Enquiries, Bookings, Vendor Assignment, Task Management, Quote Creation. Financial views restricted to Selling Price and Operational Totals; margins and vendor costs sanitized."
+    },
+    "TEAM_LEADER": {
+      "level": 3,
+      "privileges": "Subordinate to Manager: Shift coordination, team queue routing, operational check-ins."
+    },
+    "TEAM_MEMBER": {
+      "level": 4,
+      "privileges": "Lead handling, inquiry follow-up, assigned customer support. Zero margin or cost visibility."
+    }
+  },
+  "databaseInventory": {
+    "preservationStatus": "PRESERVED_WITHOUT_DELETION",
+    "totalCollections": 35,
+    "primaryCollections": {
+      "bookings": 38,
+      "quotes": 50,
+      "enquiries": 124,
+      "vendors": 41,
+      "hotel_partners": 10,
+      "areas": 1,
+      "qr_records": 10,
+      "users": 31,
+      "customer_payments": 60,
+      "generated_documents": 108,
+      "hunter_prospects": 12,
+      "hunter_runs": 8
+    }
+  },
+  "securityAudit": {
+    "passwordResetTokenLogging": "REMOVED (Zero plaintext exposure in console)",
+    "passwordResetResponse": "EXPLICIT (deliveryStatus: SMTP_NOT_CONFIGURED)",
+    "jwtAuth": "Active with RS256/HS256 signature verification",
+    "safeMode": "ACTIVE (Circuit breaker caps runs and prevents unverified calls)",
+    "emergencyStop": "READY (CEO instantaneous shutdown switch tested and verified)"
+  },
+  "externalBlockers": [
+    {
+      "dependency": "SMTP Server Credentials",
+      "status": "MISSING_IN_ENV",
+      "mitigation": "Forgot-password endpoint handles missing SMTP gracefully and returns SMTP_NOT_CONFIGURED status. System ready for production SMTP keys."
+    },
+    {
+      "dependency": "Google Gemini API Key",
+      "status": "OPTIONAL_CONFIG",
+      "mitigation": "Hunter and Sales Assistant use rule-based fallback heuristics when GEMINI_API_KEY is not configured or fails."
+    }
+  ]
+}

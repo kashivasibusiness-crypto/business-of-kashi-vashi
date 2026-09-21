@@ -1,0 +1,95 @@
+{
+  "timestamp": "2026-09-13T18:21:00.000Z",
+  "project": "Varanasi Yatra CRM",
+  "phase": "Prompt 9.15 — Final UX, QR Attribution & Production Polish",
+  "finalVerdict": "A. ALL FIXES VERIFIED",
+  "issues": [
+    {
+      "id": "FIX-1-QR-ATTRIBUTION",
+      "title": "QR Lead Attribution Clarity",
+      "severity": "HIGH",
+      "before": "Manager CRM displayed 'Source: Website Direct' for Area QR leads with only a visual 'Q' badge.",
+      "after": "Manager CRM displays 'Source: QR', 'Area: <AreaName>', 'QR ID: <qrId>', and 'Placement: <placementName>' across Lead Table, Drawer, and Customer 360.",
+      "evidence": "Verified in scripts/test-final-ux-attribution.cjs (Suites 2 & 3 passed 100%)."
+    },
+    {
+      "id": "FIX-2-CEO-KPI-TRUNCATION",
+      "title": "CEO Dashboard KPI Card Text & Currency Truncation",
+      "severity": "MEDIUM",
+      "before": "Cards showed truncated headers ('TOTAL BO...', 'BOOKING V...') and clipped currency figures on 1024px/1280px widths.",
+      "after": "KPICard has truncate removed, uses text-wrapping with whitespace-normal, and responsive grid (grid-cols-2 md:grid-cols-3 xl:grid-cols-6) preventing card squeezing.",
+      "evidence": "Verified in src/components/crm/ui/Card.jsx and CEOCommandCenter.jsx."
+    },
+    {
+      "id": "FIX-3-CEO-TERMINOLOGY",
+      "title": "Confusing CEO Business Terminology",
+      "severity": "LOW",
+      "before": "'Booking Velocity Trajectory', 'Operational Risk Radar', 'Liquid Cash', 'Physical Nodes'.",
+      "after": "Simplified to 'Booking Growth', 'Urgent Alerts', 'Bank & Cash Balance', and 'QR Areas'.",
+      "evidence": "Verified across CEOCommandCenter.jsx, FinancialCommandStrip.jsx, and QRAnalytics.jsx."
+    },
+    {
+      "id": "FIX-4-MANAGER-AI-OFF-UX",
+      "title": "Manager AI-Off State Experience",
+      "severity": "LOW",
+      "before": "Generic 'AI Help is Currently Off' notice with empty action pane.",
+      "after": "Polished notice 'AI assistance is currently switched off by the CEO' with manual fallback actions ('Create Quote', 'Ask Customer via WhatsApp') without compromising CEO-only AI controls.",
+      "evidence": "Verified in src/components/crm/shared/AISalesAssistantPanel.jsx and test-final-ux-attribution.cjs."
+    }
+  ],
+  "regressionResults": {
+    "testQrAreaRegression": {
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "status": "PASSED"
+    },
+    "testAiQrProductionAlignment": {
+      "total": 21,
+      "passed": 21,
+      "failed": 0,
+      "status": "PASSED"
+    },
+    "testManagerAiIntegration": {
+      "total": 34,
+      "passed": 34,
+      "failed": 0,
+      "status": "PASSED"
+    },
+    "testFinalUxAttribution": {
+      "total": 28,
+      "passed": 28,
+      "failed": 0,
+      "status": "PASSED"
+    },
+    "npmBuild": {
+      "status": "PASSED",
+      "buildTimeMs": 448,
+      "errors": 0
+    }
+  },
+  "invariantsPreserved": {
+    "commercialRules": "Transport strictly requires vendor quote (VENDOR_QUOTE_REQUIRED). Hotel and Boat retain selling price reference model.",
+    "financialPrivacy": "Manager cannot access vendor costs, margins, or expected profit.",
+    "roleSeparation": "Manager blocked from CEO dashboard and AI master controls (403 Forbidden).",
+    "aiSafety": "Voice AI disabled. Safe Mode active. Hunter human gate enforced (0 unverified in Manager view).",
+    "qrFlow": "Public QR routing (/q/:qrId and /public/partners/:partnerCode) operational."
+  },
+  "filesChanged": [
+    "src/components/crm/ui/Card.jsx",
+    "src/components/crm/dashboard/CEOCommandCenter.jsx",
+    "src/components/crm/dashboard/FinancialCommandStrip.jsx",
+    "src/components/crm/ceo/CEOFinancialWorkspace.jsx",
+    "src/components/crm/ceo/qr/QRAnalytics.jsx",
+    "src/components/crm/shared/LeadTable.jsx",
+    "src/components/crm/shared/LeadProfileDrawer.jsx",
+    "src/components/crm/shared/AISalesAssistantPanel.jsx",
+    "src/components/crm/customer/Customer360Workspace.jsx",
+    "src/public/components/QuickTripPlanner.jsx",
+    "backend/server.js",
+    "backend/functions/index.js",
+    "scripts/test-final-ux-attribution.cjs",
+    "scripts/final-ux-attribution-report.md",
+    "scripts/final-ux-attribution-report.json"
+  ]
+}

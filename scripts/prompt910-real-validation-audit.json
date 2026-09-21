@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "title": "Prompt 9.10 Controlled Real-Source SerpApi Validation Audit",
+    "runAt": "2026-09-11T09:55:39.032Z",
+    "environment": "validation-controlled",
+    "liveSuccess": true,
+    "safeMode": true,
+    "autonomousOutreachAllowed": false
+  },
+  "execution": {
+    "query": "need Varanasi tour package hotel darshan booking next month",
+    "sourceId": "SRC_SEARCH_API",
+    "provider": "SERP_API",
+    "latencyMs": 1959,
+    "errors": []
+  },
+  "funnelResults": {
+    "signalCount": 9,
+    "relevantCount": 5,
+    "qualifiedCount": 4,
+    "actionableCount": 1,
+    "contactableCount": 0,
+    "humanReviewedCount": 5,
+    "genuineCount": 2,
+    "rejectedCount": 4
+  },
+  "reasonCategories": {
+    "PLANNING_INTENT": 1,
+    "HIGH_INTENT": 4,
+    "INFORMATIONAL": 3,
+    "EARLY_INTENT": 1
+  },
+  "evaluatedSignalsSummary": [
+    {
+      "title": "Varanasi Tour Packages Starts 𝐚𝐭 ₹16144 𝘽𝙤𝙤𝙠 𝙉𝙤𝙬!",
+      "category": "PLANNING_INTENT",
+      "commercialIntent": "PLANNING",
+      "isQualified": true,
+      "actionabilityScore": 31
+    },
+    {
+      "title": "Incredible India Travel & Tour Package",
+      "category": "HIGH_INTENT",
+      "commercialIntent": "ACTIVE_TRAVEL_PLANNING",
+      "isQualified": true,
+      "actionabilityScore": 70
+    },
+    {
+      "title": "Tour Packages For Varanasi",
+      "category": "HIGH_INTENT",
+      "commercialIntent": "PLANNING",
+      "isQualified": true,
+      "actionabilityScore": 57
+    },
+    {
+      "title": "16 Varanasi Tour Packages",
+      "category": "INFORMATIONAL",
+      "commercialIntent": "N/A",
+      "isQualified": false,
+      "actionabilityScore": "N/A"
+    },
+    {
+      "title": "Varanasi Temple Tour – Kashi Darshan Package",
+      "category": "HIGH_INTENT",
+      "commercialIntent": "COMMERCIAL_TRIP_REQUEST",
+      "isQualified": true,
+      "actionabilityScore": 57
+    },
+    {
+      "title": "10+ Varanasi Tour Packages @ Best Deals",
+      "category": "EARLY_INTENT",
+      "commercialIntent": "N/A",
+      "isQualified": false,
+      "actionabilityScore": "N/A"
+    },
+    {
+      "title": "Varanasi Tour Packages, Spiritual Trip & Holiday Trip Deals",
+      "category": "INFORMATIONAL",
+      "commercialIntent": "N/A",
+      "isQualified": false,
+      "actionabilityScore": "N/A"
+    },
+    {
+      "title": "Varanasi's Best Travel Package ek baar banaras Aaiye our ...",
+      "category": "HIGH_INTENT",
+      "commercialIntent": "PLANNING",
+      "isQualified": true,
+      "actionabilityScore": 57
+    },
+    {
+      "title": "Varanasi Tour Packages – Book Varanasi Holidays at Best ...",
+      "category": "INFORMATIONAL",
+      "commercialIntent": "N/A",
+      "isQualified": false,
+      "actionabilityScore": "N/A"
+    }
+  ]
+}

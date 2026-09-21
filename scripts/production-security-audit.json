@@ -1,0 +1,146 @@
+{
+  "timestamp": "2026-09-13T14:45:00.000Z",
+  "auditType": "PRODUCTION_SECURITY_AND_DEPLOYMENT_READINESS",
+  "project": "Varanasi Yatra",
+  "auditor": "Senior Production Security Reviewer & Deployment Auditor",
+  "executiveVerdict": "B. READY AFTER FIXES",
+  "deploymentDecision": "NO-GO (PENDING PRE-DEPLOYMENT CONFIGURATION & DATA CLEANUP)",
+  "summary": {
+    "totalChecks": 24,
+    "green": 14,
+    "yellow": 8,
+    "red": 2,
+    "notVerified": 0
+  },
+  "criticalAnswers": {
+    "q1_secrets_exposed": false,
+    "q2_passwords_tokens_exposed": false,
+    "q3_ceo_apis_accessible_to_manager": false,
+    "q4_financial_privacy_enforced_server_side": true,
+    "q5_public_endpoints_safe": true,
+    "q6_qr_attribution_protected": true,
+    "q7_ai_provider_config_protected": true,
+    "q8_hunter_human_gate_enforced": true,
+    "q9_voice_ai_disabled": true,
+    "q10_safe_mode_enforced": true,
+    "q11_kill_switch_ceo_only": true,
+    "q12_production_localhost_references": false,
+    "q13_smtp_configured": "PARTIAL / NOT CONFIGURED",
+    "q14_development_auth_bypasses": false,
+    "q15_destructive_db_startup_behaviors": false,
+    "q16_production_build_succeeds": true,
+    "q17_safe_to_deploy_immediately": false
+  },
+  "findings": [
+    {
+      "id": "SEC-01",
+      "category": "CORS / Network Security",
+      "severity": "HIGH",
+      "status": "RED",
+      "evidence": "backend/config/env.js defaultOrigins lists Vercel preview domains and localhost, but omits 'https://varanasiyatra.com'",
+      "file": "backend/config/env.js",
+      "risk": "Requests from official domain https://varanasiyatra.com will be blocked by CORS unless ALLOWED_ORIGINS env var is explicitly set in production host",
+      "recommendedFix": "Add 'https://varanasiyatra.com' to defaultOrigins array and ensure ALLOWED_ORIGINS is injected in production hosting environment",
+      "productionImpact": "CORS rejection on production website if env variable omitted"
+    },
+    {
+      "id": "SEC-02",
+      "category": "Database Safety & Hygiene",
+      "severity": "HIGH",
+      "status": "RED",
+      "evidence": "MongoDB scan found 78 test enquiries, 26 test users, 40 test vendors, and 4 test bookings in active database",
+      "file": "MongoDB Database",
+      "risk": "Deploying with existing database pollutes CRM operational queues with mock and test artifacts",
+      "recommendedFix": "Point production to a fresh dedicated production MongoDB Atlas cluster or execute a clean pre-production migration script",
+      "productionImpact": "Operators see clutter and dummy leads on Day 1"
+    },
+    {
+      "id": "SEC-03",
+      "category": "Authentication",
+      "severity": "MEDIUM",
+      "status": "YELLOW",
+      "evidence": "backend/server.js initializeUsers() seeds CEO and Manager using fallback passwords if env vars are unset",
+      "file": "backend/server.js:281-283",
+      "risk": "Default initial credentials could be used if CEO_INITIAL_PASSWORD and MANAGER_INITIAL_PASSWORD are not set in production env",
+      "recommendedFix": "Mandate CEO_INITIAL_PASSWORD and MANAGER_INITIAL_PASSWORD in env.js validation during production startup",
+      "productionImpact": "Potential default credential risk if env vars omitted"
+    },
+    {
+      "id": "SEC-04",
+      "category": "Authentication",
+      "severity": "LOW",
+      "status": "YELLOW",
+      "evidence": "backend/server.js loginLimiter max is set to 500 requests per 15 minutes",
+      "file": "backend/server.js:716",
+      "risk": "500 attempts in 15 minutes is permissive against dedicated credential stuffing attacks",
+      "recommendedFix": "Reduce production loginLimiter to 15-30 requests per 15-minute window",
+      "productionImpact": "Increased brute-force attack surface"
+    },
+    {
+      "id": "SEC-05",
+      "category": "Dependencies",
+      "severity": "MEDIUM",
+      "status": "YELLOW",
+      "evidence": "backend/package.json includes firebase-tools as a direct production dependency (pulling superstatic, exegesis, etc.)",
+      "file": "backend/package.json:19",
+      "risk": "Heavy CLI dev-tools increase attack surface and trigger npm audit warnings in production container",
+      "recommendedFix": "Move firebase-tools to devDependencies or manage Firebase CLI globally in CI/CD pipeline",
+      "productionImpact": "Bloated production image and unnecessary third-party package exposure"
+    },
+    {
+      "id": "SEC-06",
+      "category": "Production Configuration",
+      "severity": "MEDIUM",
+      "status": "YELLOW",
+      "evidence": "src/constants/crm.js defaults BASE_URL to Google Cloud Run URL 'https://api-gzo7qrxiuq-uc.a.run.app' in PROD if VITE_API_BASE_URL is unset",
+      "file": "src/constants/crm.js:2",
+      "risk": "If building for a different backend server without passing VITE_API_BASE_URL, frontend will attempt to connect to Cloud Run instance",
+      "recommendedFix": "Ensure VITE_API_BASE_URL is explicitly set during the frontend build step in CI/CD / hosting provider",
+      "productionImpact": "Frontend connects to wrong backend if build env var omitted"
+    },
+    {
+      "id": "SEC-07",
+      "category": "Email / SMTP",
+      "severity": "LOW",
+      "status": "YELLOW",
+      "evidence": "Nodemailer is configured for Gmail service using EMAIL_USER/EMAIL_PASS; if unset, deliveryStatus returns SMTP_NOT_CONFIGURED",
+      "file": "backend/server.js:687",
+      "risk": "Automated password resets and customer inquiry emails will not dispatch until production SMTP/SendGrid credentials are provided",
+      "recommendedFix": "Configure production SMTP credentials (e.g. SendGrid, Amazon SES, or Brevo) in hosting environment",
+      "productionImpact": "Manual password reset required until SMTP credentials added"
+    },
+    {
+      "id": "SEC-08",
+      "category": "HTTP Security Headers",
+      "severity": "LOW",
+      "status": "YELLOW",
+      "evidence": "Helmet configuration sets contentSecurityPolicy: false",
+      "file": "backend/server.js:55",
+      "risk": "Lack of strict Content-Security-Policy header increases susceptibility to potential inline script injection",
+      "recommendedFix": "Define a tailored CSP policy with allowed script-src and connect-src directives",
+      "productionImpact": "Missing Defense-in-Depth layer against XSS"
+    },
+    {
+      "id": "SEC-09",
+      "category": "Error Handling",
+      "severity": "LOW",
+      "status": "YELLOW",
+      "evidence": "No centralized Express error-handling middleware mounted at end of backend/server.js",
+      "file": "backend/server.js:4300-4338",
+      "risk": "Uncaught asynchronous errors in non-try/catch route handlers could trigger default Express HTML responses or unhandled rejections",
+      "recommendedFix": "Mount app.use((err, req, res, next) => ...) at bottom of middleware stack",
+      "productionImpact": "Suboptimal error response formatting for unexpected exceptions"
+    },
+    {
+      "id": "SEC-10",
+      "category": "Performance",
+      "severity": "LOW",
+      "status": "YELLOW",
+      "evidence": "GET /admin/enquiries queries all 10 booking/enquiry collections into Node memory before slicing pagination",
+      "file": "backend/server.js:701,1687",
+      "risk": "At high volume (100k+ records), in-memory collection aggregation could create memory pressure",
+      "recommendedFix": "Implement database-level pagination ($facet or single-collection indexed query) for long-term scalability",
+      "productionImpact": "Higher memory consumption under heavy lead volumes"
+    }
+  ]
+}
