@@ -1,27 +1,38 @@
-# Varanasi Yatra Operations 🚩 (v1.0.0 Release)
+# Kashi-Vashi Travel OS 🚩 (Business of Kashi-Vashi)
 
-A premium, commercial-grade travel CRM and customer portal designed for **Varanasi Yatra**, a travel agency specializing in customized pilgrimages and sightseeing tours across Varanasi, Ayodhya, Bodh Gaya, Chunar, Mirzapur, and Nepal.
+[![Release](https://img.shields.io/badge/Release-v1.0.0-orange.svg)](https://github.com/kashivasibusiness-crypto/business-of-kashi-vashi)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8.svg)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-22-green.svg)](https://nodejs.org/)
+[![Database](https://img.shields.io/badge/MongoDB-Atlas-darkgreen.svg)](https://www.mongodb.com/)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](#)
 
-This repository hosts both the SEO-optimized customer portal and the unified **Varanasi Yatra Operations** SaaS-style CRM.
+> **काशी Vashi** — *Spiritual & Heritage Journeys*  
+> **Tagline:** *यात्रा नहीं, अनुभव है (Spiritual Journeys, Authentic Experiences)*  
+> **Motto:** *Explore • Pray • Experience*
+
+A commercial-grade, end-to-end Travel Operations OS and Customer Experience Portal engineered for **Kashi-Vashi** (formerly Varanasi Yatra) — a luxury and spiritual travel agency specializing in bespoke pilgrimages, heritage walks, VIP temple darshans, and curated tours across **Varanasi (Kashi), Ayodhya, Prayagraj, Bodh Gaya, Chunar, Mirzapur, and Nepal**.
+
+This repository hosts both the high-conversion, SEO-optimized customer portal and the unified, multi-role SaaS Travel CRM.
 
 ---
 
-## 📸 Visual Showcases & Screenshots
+## 📸 Visual Showcases & Workspaces
 
-### 🖥️ 1. SaaS Admin CRM Dashboard (Version 1.0)
-A premium, Stripe-inspired operations control center containing real-time analytics, dynamic status metric filters, a fast search bar, interactive customer actions (call, email, quick WhatsApp chat), and inline profile editing.
+### 🖥️ 1. Multi-Role SaaS Operations CRM
+A Stripe & Linear-inspired operations control center containing real-time analytics, booking pipeline visualization, dynamic status metric filters, fast search, customer communication shortcuts, and role-based views.
 ![SaaS CRM Dashboard Overview](./public/screenshots/media__1784470115168.png)
 
-### ➕ 2. Offline Manual Booking Entry Drawer
-Allows operators to record telephone inquiries, walk-ins, and WhatsApp bookings. Features custom datepickers, passenger counts, and automatic outstanding balance calculations (Package Cost - Advance Paid) if the status is set to *Confirmed*.
+### ➕ 2. Offline Manual Booking & Lead Drawer
+Allows operators to record telephone inquiries, walk-ins, and WhatsApp bookings with real-time package calculations, passenger counts, and automatic balance due tracking (Package Cost − Advance Paid).
 ![Add Manual Lead Drawer](./public/screenshots/media__1784469488027.png)
 
-### ✉️ 3. Premium Customer Confirmation Receipts
-HTML receipts triggered automatically on confirmed bookings, highlighting payment status, travel date, pickup point, and due payments in an easy-to-read, formatted format.
+### ✉️ 3. Premium Customer Confirmation Receipts & Vouchers
+Automated HTML/PDF vouchers and receipts generated for confirmed bookings, highlighting travel dates, passenger manifests, pickup points, payment logs, and QR verification codes.
 ![Receipt Mockup](./public/screenshots/media__1784457761923.png)
 
-### 🌐 4. Customer-Facing Travel Portal
-A premium, responsive, and SEO-optimized customer landing page featuring curated travel packages, interactive destination grids, customer testimonials, and an automated enquiry booking form.
+### 🌐 4. Customer-Facing Pilgrimage & Travel Portal
+Responsive and SEO-optimized customer landing page featuring curated pilgrimage packages, interactive temple itinerary builders, verified customer testimonials, and an automated enquiry booking flow.
 ![Customer Portal Home](./public/screenshots/media__1784474435582.png)
 ![Popular Destinations Nearby](./public/screenshots/media__1784474451757.png)
 ![Our Story / Kashi Pilgrimage Narrative](./public/screenshots/media__1784474461787.png)
@@ -30,23 +41,48 @@ A premium, responsive, and SEO-optimized customer landing page featuring curated
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features & Capabilities
 
-*   **World-Class Varanasi Destination Page:** Detailed sightseeing guide of 10 primary attractions, sample timelines, local food guides, shopping coordinates, and 20 detailed tourist FAQs.
-*   **Unified CRM & Pipeline Manager:** auth-guarded via passcode verification (`1234` by default) to let operators monitor total, pending, in-progress, confirmed, and cancelled bookings.
-*   **CRO Optimized Forms:** Pre-fills WhatsApp API message intents, handles automated field validations, and returns responsive, formatted customer notices.
-*   **Automated Email Notifications:** NodeMailer integration on local & serverless endpoints that dispatches high-quality, formatted alert emails to admin on new bookings, and confirmation receipts to customers.
-*   **Security & Compliance:** Custom rate-limiters (`express-rate-limit`) implemented on sensitive endpoints (PIN verification, booking creations) to prevent spam.
-*   **React 19 Native SEO Hoisting:** Updates title headers, canonical links, and schemas (`TouristTrip` and `BreadcrumbList` JSON-LD data) for crawl optimization.
-*   **Clean and Robust Codebase:** Fully audited via `oxlint` with zero warnings or errors.
+### 🏢 1. Role-Based Operations CRM
+- **CEO Command Center:** Executive revenue dashboards, conversion velocity, monthly booking projections, partner performance analytics, and dynamic QR attribution tracking.
+- **Operations Manager:** Comprehensive lead distribution, booking lifecycle stages (*New, In-Progress, Confirmed, Completed, Cancelled*), and payment audit logs.
+- **Team Leader & Sales Member:** Lead queue management, call log recording, and pre-formatted WhatsApp customer follow-up actions.
+- **Hotel Partner Portal:** Hotel room QR check-in logs, commission reconciliations, and guest inquiry management.
+
+### 🤖 2. Grounded AI Sales & Customer Concierge
+- **AI Customer Assistant:** Grounded knowledge base covering authentic temple rituals, Ghat boat timings, VIP Darshan rules, and dress codes.
+- **Smart Sales Assistant:** Instant quote generator, objection-handling templates, and customizable itinerary drafts for sales agents.
+
+### 📲 3. Dynamic QR Code Engine & Partner Attribution
+- **In-Room Hotel QRs:** Distinct QR codes for partner hotels to capture in-room tourist inquiries with automated attribution.
+- **Ghat & Kiosk QRs:** Geotagged QR codes placed across prominent Varanasi Ghats (Assi, Dashashwamedh, Manikarnika) routing tourists to localized assistance pages.
+
+### ✉️ 4. Multi-Channel Automation & Document Generator
+- **WhatsApp Cloud API Integration:** Pre-fills WhatsApp message intents and automated dispatch queues.
+- **Automated Email Notifications:** NodeMailer integration on local & serverless endpoints that dispatches formatted alerts on new bookings and confirmation receipts to customers.
+- **Branded Vouchers & Invoices:** Print-ready travel vouchers, booking confirmations, and customer bills with brand typography and seals.
+
+### 🔍 5. Modern SEO & Web Performance
+- **React 19 Native SEO:** Dynamic title headers, canonical links, and Open Graph cards.
+- **Structured Schema.org Data:** Injected `TouristTrip`, `BreadcrumbList`, and `Organization` JSON-LD data for high Google ranking.
+- **PWA Ready:** Registered Web Manifest, service worker capabilities, and high-res Apple Touch icons.
+- **Code Quality:** Fully audited with `oxlint` with zero errors.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Frontend Framework:** React 19, Vite, React Router v6, Tailwind CSS
-- **Local Runner:** Node.js, Express.js
-- **Production Infrastructure:** Firebase Cloud Functions (Gen 2 Node.js 22), Firebase Hosting (Vite builds), MongoDB Atlas (Cloud Database)
+| Layer | Technologies |
+|---|---|
+| **Frontend Framework** | React 19, Vite 8, React Router v7 |
+| **Styling & UI** | Tailwind CSS v4, Heroicons / Lucide Icons |
+| **Backend & APIs** | Node.js (v22), Express.js (Modular Route Architecture) |
+| **Serverless Deployment** | Firebase Cloud Functions (Gen 2, Node.js 22) |
+| **Database & ODM** | MongoDB Atlas, Mongoose |
+| **Document Generation** | PDFKit / HTML Canvas Voucher Renderers |
+| **Email & Messaging** | Nodemailer (SMTP), Meta WhatsApp Cloud API / Direct WA Deep Links |
+| **Hosting Targets** | Vercel (Frontend), Render / Cloud Run / Firebase (Backend) |
+| **Code Quality** | oxlint, ESLint, Prettier |
 
 ---
 
@@ -54,23 +90,40 @@ A premium, responsive, and SEO-optimized customer landing page featuring curated
 
 ```bash
 ├── backend/
-│   ├── functions/             # Firebase Cloud Functions (Production backend)
+│   ├── automation/            # Email & WhatsApp dispatchers
+│   │   ├── messageTemplates.js
+│   │   └── notificationService.js
+│   ├── documents/             # PDF voucher & receipt generators
+│   │   └── documentTemplates.js
+│   ├── functions/             # Firebase Cloud Functions (Serverless backend)
 │   │   ├── index.js           # Serverless API routes & rate limiters
 │   │   └── package.json
-│   ├── server.js              # Local Express development server
-│   └── .env                   # Environment credentials
+│   ├── modules/ai/            # Grounded AI concierge & sales assistant
+│   │   ├── aiService.js
+│   │   ├── customerAssistantService.js
+│   │   └── salesAssistantService.js
+│   ├── server.js              # Production Express server (Render / Docker)
+│   └── .env.example           # Backend environment configuration
 ├── public/
-│   ├── screenshots/           # Release screenshots
-│   ├── sitemap.xml            # Dynamic SEO sitemap
+│   ├── screenshots/           # Application showcases
+│   ├── favicon.png            # Kashi-Vashi browser favicon
+│   ├── manifest.json          # PWA Web Manifest
+│   ├── sitemap.xml            # SEO Search Sitemap
 │   └── robots.txt             # Search crawler directives
+├── scripts/                   # Production health check & validation audits
+│   ├── staging-smoke-test.js
+│   └── kashi-vashi-brand-audit.md
 └── src/
-    ├── assets/                # Local landscape and branding media
+    ├── assets/                # High-res logos, brand artwork & media
     ├── components/
-    │   ├── SEO.jsx            # Dynamic metadata injector
-    │   ├── BookingForm.jsx    # Secure leads capture form
-    │   ├── VaranasiDestination.jsx # Interactive Varanasi itinerary planner
-    │   └── AdminCRM.jsx       # Auth-guarded transaction control center
-    ├── App.jsx                # Layout routes configuration
+    │   └── crm/               # Role-based CRM workspaces (CEO, Manager, Agent, Hotel)
+    ├── public/                # Customer-facing pilgrimage portal
+    │   ├── components/        # Header, Footer, Hero, QuickTripPlanner, AI Concierge
+    │   ├── pages/             # Destinations, Tours, Guides, Legal pages
+    │   └── seo/               # React 19 SEO & JSON-LD Schemas
+    ├── shared/
+    │   └── config/brand.js    # Single source of truth for branding & contacts
+    ├── App.jsx                # Layout & route definitions
     └── main.jsx
 ```
 
@@ -78,32 +131,65 @@ A premium, responsive, and SEO-optimized customer landing page featuring curated
 
 ## 💻 Local Development Setup
 
-### 1. Backend API Server
-Navigate to the backend directory, install packages, and boot the server:
+### 1. Prerequisites
+- **Node.js:** v18.0.0 or higher (v20+ recommended)
+- **npm:** v9.0.0 or higher
+- **MongoDB:** Local MongoDB instance or free MongoDB Atlas URI
+
+### 2. Backend API Setup
+Navigate to the `backend/` directory, install packages, and boot the server:
 ```bash
 cd backend
 npm install
 node server.js
 ```
-*API will listen at `http://localhost:5001`.*
+*Backend server will listen at `http://localhost:5001`.*
 
-### 2. Frontend Development Server
-From the root workspace folder, boot the Vite client:
+### 3. Frontend Client Setup
+In a new terminal, from the root repository directory:
 ```bash
 npm install
 npm run dev
 ```
-*Vite client will listen at `http://localhost:5173`. Access `http://localhost:5173/?view=admin` to open the Operations CRM.*
+*Frontend client will listen at `http://localhost:5173`.*
+
+- **Customer Travel Portal:** `http://localhost:5173/`
+- **Operations CRM Dashboard:** `http://localhost:5173/?view=admin` *(or `/crm`)*
 
 ---
 
-## 📦 Production Bundling & Linting
-Enforce code quality standards and generate optimized client assets:
+## 📦 Production Bundling & Validation
+
+Enforce code quality standards, run linting checks, and compile optimized distribution assets:
+
 ```bash
-# Code linter check
+# Code linter check (oxlint)
 npm run lint
 
 # Production compiler build
 npm run build
+
+# Boot local production preview
+npm run preview
 ```
-Optimized assets will output inside `/dist`, ready for direct deployment.
+Compiled production bundles will output to `/dist`, ready for static web hosting.
+
+---
+
+## 📞 Official Business Contacts & Verification
+
+| Channel | Detail |
+|---|---|
+| **Official Brand Name** | **Kashi-Vashi** (काशी Vashi) |
+| **Official Domain** | [https://varanasiyatra.com](https://varanasiyatra.com) |
+| **Customer Support Phone** | [+91 84005 54029](tel:+918400554029) |
+| **Official WhatsApp Desk** | [+91 81497 83494](https://wa.me/918149783494) |
+| **Official Email** | [info.varanasi.yatra@gmail.com](mailto:info.varanasi.yatra@gmail.com) |
+| **Official Instagram** | [@info.varanasi.yatra](https://www.instagram.com/info.varanasi.yatra/) |
+| **GitHub Repository** | [kashivasibusiness-crypto/business-of-kashi-vashi](https://github.com/kashivasibusiness-crypto/business-of-kashi-vashi) |
+
+---
+
+<div align="center">
+  <sub>Designed & Developed for <b>Kashi-Vashi Travel OS</b>. All Rights Reserved © 2026.</sub>
+</div>
