@@ -10,7 +10,7 @@ export default function ContactPage() {
         <>
             <SEO
                 title="Contact Kashi-Vashi | 24x7 Local Helpline & WhatsApp Desk"
-                description="Get in touch with our local Varanasi travel coordinators. Direct phone: +91 84005 54029, WhatsApp: +91 81497 83494, Email: info.varanasi.yatra@gmail.com, Instagram: @info.varanasi.yatra."
+                description="Get in touch with our local Varanasi travel coordinators. Direct phone: +91 84005 54029, WhatsApp: +91 81497 83494, Email: kashivasi.business@gmail.com, Instagram: @info.varanasi.yatra."
                 pathname="/contact"
             />
 
@@ -89,7 +89,7 @@ export default function ContactPage() {
 
                         {/* Official Email */}
                         <a
-                            href="mailto:info.varanasi.yatra@gmail.com"
+                            href="mailto:kashivasi.business@gmail.com"
                             className="block bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hover:border-amber-500/50 hover:shadow-md transition group"
                         >
                             <div className="flex items-center gap-4">
@@ -101,7 +101,7 @@ export default function ContactPage() {
                                         Official Email Desk
                                     </span>
                                     <span className="text-xs font-mono font-bold text-stone-900 group-hover:text-amber-700 transition-colors break-all">
-                                        info.varanasi.yatra@gmail.com
+                                        kashivasi.business@gmail.com
                                     </span>
                                     <span className="text-[11px] text-stone-500 block mt-0.5">
                                         For formal proposals, group inquiries, and partnerships

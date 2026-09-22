@@ -9,7 +9,7 @@ export const buildOrganizationSchema = () => ({
     "logo": `${BASE_DOMAIN}/logo.png`,
     "description": "Premier spiritual pilgrimage and customized tour operator in Varanasi, providing verified hotels near the ghats, private river boat cruises, Kashi Vishwanath darshan assistance, and private transport.",
     "telephone": "+918400554029",
-    "email": "info.varanasi.yatra@gmail.com",
+    "email": "kashivasi.business@gmail.com",
     "address": {
         "@type": "PostalAddress",
         "addressLocality": "Varanasi",

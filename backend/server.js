@@ -1276,7 +1276,7 @@ app.post('/api/enquiry', enquiryLimiter, async (req, res) => {
     </div>
 
     <div style="text-align: center; margin-top: 25px; border-top: 1px solid #e7e5e4; padding-top: 15px;">
-        <a href="https://varanasi-yatra.vercel.app/?view=admin" style="display: inline-block; background-color: #d97706; color: #ffffff; text-decoration: none; padding: 10px 20px; font-size: 12px; font-weight: bold; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Open Admin CRM Portal ➔</a>
+        <a href="${process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/?view=admin` : 'https://varanasiyatra.com/?view=admin'}" style="display: inline-block; background-color: #d97706; color: #ffffff; text-decoration: none; padding: 10px 20px; font-size: 12px; font-weight: bold; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Open Admin CRM Portal ➔</a>
     </div>
 </div>`
             };

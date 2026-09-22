@@ -709,7 +709,7 @@ async function runAudit() {
         const p18 = {
             phone: brandContent.includes('+91 84005 54029'),
             whatsapp: brandContent.includes('+91 81497 83494'),
-            email: brandContent.includes('info.varanasi.yatra@gmail.com'),
+            email: brandContent.includes('kashivasi.business@gmail.com') || brandContent.includes('info.varanasi.yatra@gmail.com'),
             website: brandContent.includes('varanasiyatra.com')
         };
         auditResults.phases.phase18_brand = p18;

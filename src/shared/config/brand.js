@@ -34,8 +34,8 @@ export const WHATSAPP_RAW_NUMBER = '918149783494';
 export const WHATSAPP_DEFAULT_MESSAGE = 'Namaste Kashi-Vashi! I need assistance.';
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_RAW_NUMBER}?text=${encodeURIComponent(WHATSAPP_DEFAULT_MESSAGE)}`;
 
-export const EMAIL = 'info.varanasi.yatra@gmail.com';
-export const EMAIL_URL = 'mailto:info.varanasi.yatra@gmail.com';
+export const EMAIL = 'kashivasi.business@gmail.com';
+export const EMAIL_URL = 'mailto:kashivasi.business@gmail.com';
 
 export const INSTAGRAM_HANDLE = '@info.varanasi.yatra';
 export const INSTAGRAM_URL = 'https://www.instagram.com/info.varanasi.yatra/';

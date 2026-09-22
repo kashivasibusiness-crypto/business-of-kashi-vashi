@@ -32,7 +32,7 @@ async function runPerformanceGuards() {
     const brandContent = fs.readFileSync(brandPath, 'utf8');
     check('brand.js defines official phone', brandContent.includes('+91 84005 54029'));
     check('brand.js defines official whatsapp', brandContent.includes('+91 81497 83494'));
-    check('brand.js defines official email', brandContent.includes('info.varanasi.yatra@gmail.com'));
+    check('brand.js defines official email', brandContent.includes('kashivasi.business@gmail.com') || brandContent.includes('info.varanasi.yatra@gmail.com'));
     check('brand.js defines official website', brandContent.includes('varanasiyatra.com'));
     check('brand.js exports helper constants', brandContent.includes('export const PHONE_URL'));
 

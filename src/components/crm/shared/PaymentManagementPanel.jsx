@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { crmApi } from '../../../services/crmApi';
 import { safeDateOnly } from '../../../utils/dateUtils';
+import { BASE_URL } from '../../../constants/crm';
 
 export default function PaymentManagementPanel({
     booking,
@@ -155,7 +156,6 @@ export default function PaymentManagementPanel({
             });
 
             if (res.success && res.document) {
-                const BASE_URL = import.meta.env.VITE_API_URL || 'https://api-gzo7qrxiuq-uc.a.run.app';
                 const directPdfUrl = `${BASE_URL}/admin/documents/${res.document.documentId}?download=true&token=${token}`;
                 window.open(directPdfUrl, '_blank');
             } else {

@@ -35,13 +35,20 @@ Deploy karne se pehle in 3 platforms par aapke free accounts hone chahiye:
 
 Aapke paas already working MongoDB connection hai, lekin agar naya cluster use karna ho ya settings verify karni ho:
 
-### Step 2.1: Network Access (Most Important ⚠️)
-1. [MongoDB Atlas Dashboard](https://cloud.mongodb.com) me login karein.
-2. Left menu me **Security** ➔ **Network Access** par jayein.
-3. **+ Add IP Address** par click karein.
-4. **"Allow Access From Anywhere"** select karein (yeh `0.0.0.0/0` set kar dega).
-5. **Confirm** karein.  
-   *(Agar yeh step miss hua toh Render backend database se connect nahi kar payega!)*
+### Step 2.1: Network Access & IP Allowlisting 🛡️
+Render backend ko MongoDB Atlas se connect karne ke liye networking requirements ko samajhna zaroori hai:
+
+1. **Render Free / Starter Plan (Dynamic Outbound IPs):**
+   - Render ke standard/free tier instances dynamic cloud pools (AWS/Cloudflare) se outbound requests bhejte hain jinka IP fixed nahi hota.
+   - **Practical Fallback:** MongoDB Atlas dashboard me **Security** ➔ **Network Access** me jayein aur **"Allow Access From Anywhere"** (`0.0.0.0/0`) set karein.
+   - **Defense-in-Depth Security:** Jab `0.0.0.0/0` use karein, toh database security in 4 cheezon par depend karti hai:
+     - High-entropy strong password (32+ characters).
+     - SCRAM-SHA-256 authentication (Atlas unauthenticated requests drop kar deta hai).
+     - TLS 1.2+ encrypted connection in transit (`mongodb+srv://`).
+     - User privilege: Database user ko sirf apne app database par `readWrite` access dein (kabhi `atlasAdmin` na dein).
+
+2. **Render Team / Enterprise Plan (Static Outbound IPs):**
+   - Agar aap paid Team/Enterprise plan par hain jisme dedicated static egress IPs milti hain, toh sirf wahi specific outbound IP addresses Atlas me whitelist karein. (`0.0.0.0/0` ki zaroorat nahi hogi).
 
 ### Step 2.2: Connection String Copy Karein
 1. Left menu me **Database** par jayein.
@@ -86,15 +93,15 @@ Render page par niche **"Advanced"** ya **"Environment Variables"** section me j
 | `NODE_ENV` | `production` | Production mode enable karne ke liye |
 | `PORT` | `10000` | Render default port |
 | `MONGODB_URI` | `mongodb+srv://admin:xxxx@cluster0...` | Aapka MongoDB Atlas URI |
-| `JWT_SECRET` | `kashi_vashi_super_secret_jwt_key_2026_prod` | 32+ character ka random secret |
-| `JWT_REFRESH_SECRET` | `kashi_vashi_refresh_secret_key_2026_prod` | 32+ character ka random secret |
+| `JWT_SECRET` | `[GENERATE_32_PLUS_CHARS]` | 32+ character ka cryptographically strong random secret |
+| `JWT_REFRESH_SECRET` | `[GENERATE_32_PLUS_CHARS]` | 32+ character ka cryptographically strong random secret |
 | `ALLOWED_ORIGINS` | `*` *(Temporary, baad me Vercel URL dalein)* | CORS allow karne ke liye |
 | `CEO_EMAIL` | `ceo@banarasyatra.com` | Default CEO email |
-| `CEO_INITIAL_PASSWORD` | `CeoSecurePass123!` | Strong password |
+| `CEO_INITIAL_PASSWORD` | `[GENERATE_DURING_DEPLOYMENT]` | Strong random password |
 | `MANAGER_EMAIL` | `manager@banarasyatra.com` | Default Manager email |
-| `MANAGER_INITIAL_PASSWORD` | `ManagerSecurePass123!` | Strong password |
-| `EMAIL_USER` | `info.varanasi.yatra@gmail.com` | *(Optional) Gmail ID receipts ke liye* |
-| `EMAIL_PASS` | `ileo nmbx vsba sqgf` | *(Optional) Gmail App Password* |
+| `MANAGER_INITIAL_PASSWORD` | `[GENERATE_DURING_DEPLOYMENT]` | Strong random password |
+| `EMAIL_USER` | `kashivasi.business@gmail.com` | *(Optional) Official Gmail ID receipts ke liye* |
+| `EMAIL_PASS` | `[YOUR_GMAIL_APP_PASSWORD]` | *(Optional) Gmail 16-digit App Password* |
 
 ### Step 3.4: Deploy Karein
 1. Niche **"Create Web Service"** par click karein.
@@ -178,7 +185,7 @@ Deploy hone ke baad yeh 4 tests zaroor perform karein:
 * Passcode screen par PIN enter karein: `9889434368` (ya `1234`).
 * CEO login credentials dalein:
   - **Email:** `ceo@banarasyatra.com`
-  - **Password:** `CeoSecurePass123!`
+  - **Password:** *(Step 3.3 me set kiya gaya CEO_INITIAL_PASSWORD)*
 * Dashboard me check karein ki Test 2 me submit hui booking wahan "New Leads" me dikh rahi hai.
 
 ### ✅ Test 4: PDF Receipt / Voucher Download
@@ -191,8 +198,8 @@ Deploy hone ke baad yeh 4 tests zaroor perform karein:
 | Role | Access Route | Email / PIN | Password |
 |---|---|---|---|
 | **Quick PIN Gate** | `/?view=admin` | `9889434368` / `1234` | — |
-| **CEO Portal** | `/crm` | `ceo@banarasyatra.com` | `CeoSecurePass123!` |
-| **Operations Manager** | `/crm` | `manager@banarasyatra.com` | `ManagerSecurePass123!` |
+| **CEO Portal** | `/crm` | `ceo@banarasyatra.com` | `[RENDER me set kiya password]` |
+| **Operations Manager** | `/crm` | `manager@banarasyatra.com` | `[RENDER me set kiya password]` |
 
 ---
 
@@ -217,6 +224,90 @@ Isliye Vercel par SPA routing bina kisi error ke smoothly work karegi.
 
 ---
 
+## 9. KASHI VASHI AI CORE & MODULAR BUSINESS OS ARCHITECTURE (VISION DOCUMENT)
+
+Kashi Vashi application ko modular **AI Business Operating System** banane ke liye yeh 10 foundational core layers design ki gayi hain jo future multi-agent extensibility ko enable karti hain bina existing CRM, bookings, ya database models ko rewrite kiye.
+
+```
++---------------------------------------------------------------------------------------+
+|                             EXTERNAL INGESTION & CLIENTS                              |
+|   CRM UI  |  Public Web  |  WhatsApp Bot  |  Partner Portal  |  MCP Clients / API     |
++---------------------------------------------------------------------------------------+
+                                           │
+                                           ▼
++---------------------------------------------------------------------------------------+
+| LAYER 10: PERMISSION & AUDIT GATEWAY                                                  |
+| - Role Validation (CEO, Manager, Team Leader, Team Member)                            |
+| - High-Impact Mutation Protection (Safe Mode, Financial Masking, Approval Gates)     |
+| - Immutable Audit Logging (runId, actorRole, tool, targetId, decision, reason)        |
++---------------------------------------------------------------------------------------+
+                                           │
+                                           ▼
++---------------------------------------------------------------------------------------+
+| LAYER 2: CENTRAL TASK ENGINE                                                          |
+| - Canonical Task Model (id, source, requestedBy, type, priority, plan, steps, status)  |
+| - Lifecycle State Machine:                                                            |
+|   PENDING ──► PLANNING ──► RUNNING ──► WAITING ──► COMPLETED / FAILED / CANCELLED      |
++---------------------------------------------------------------------------------------+
+                                           │
+                    ┌──────────────────────┴──────────────────────┐
+                    ▼                                             ▼
++---------------------------------------+   +-------------------------------------------+
+| LAYER 1 & 4: AGENT ENGINE & REGISTRY  |   | LAYER 5: MEMORY & CONTEXT LAYER           |
+| Extensible Agent Contracts:           |   | 1. Task Memory (scratchpad per run)       |
+| • id, name, version, capabilities     |   | 2. Customer Context (privacy-sanitized)   |
+| • assigned tools, permissions, status |   | 3. Business Knowledge (verified packages) |
+| Active Agents:                        |   | 4. Agent Context (working state)          |
+| - Customer Assistant                  |   | 5. Long-term Memory (interaction patterns)|
+| - Sales Assistant                     |   +-------------------------------------------+
+| - Customer Hunter                     |
+| Future Extensible Agents:             |
+| - Booking, Finance, Document,         |
+|   Marketing, Analytics, Ops, Research |
++---------------------------------------+
+                    │
+                    ▼
++---------------------------------------------------------------------------------------+
+| LAYER 3: CATEGORY-AWARE TOOL REGISTRY                                                 |
+| - Categories: CRM, BOOKING, CUSTOMER, PAYMENT, DOCUMENT, EMAIL, NOTIFICATION, SEARCH, |
+|   ANALYTICS, EXTERNAL                                                                 |
+| - Safe Mode Enforcement (Mutation & Payment tools require human approval)            |
+| - Isolated Database Access (Zero direct MongoDB query execution by LLMs)             |
++---------------------------------------------------------------------------------------+
+                    │
+                    ▼
++---------------------------------------------------------------------------------------+
+| LAYER 8 & 9: MCP & API/WEBHOOK INTEGRATION LAYER                                      |
+| - Model Context Protocol tool endpoints (create_task, get_task_status, list_agents)   |
+| - Inbound/Outbound Webhooks with cryptographic HMAC signatures                        |
++---------------------------------------------------------------------------------------+
+                    │
+                    ▼
++---------------------------------------------------------------------------------------+
+| LAYER 6 & 7: EVALUATION & CONTROLLED SELF-IMPROVEMENT ENGINE                          |
+| - Monitored Telemetry: Latency, Failure Rate, Retry Rate, User Corrections            |
+| - Governance Loop:                                                                    |
+|   OBSERVE ──► EVALUATE ──► IDENTIFY PROBLEM ──► GENERATE IMPROVEMENT PROPOSAL ──►      |
+|   SANDBOX TEST ──► EVALUATE ──► HUMAN APPROVAL ──► VERSIONED CHANGE ──► DEPLOY        |
+| - Strict Rule: Zero autonomous code rewrites or unapproved deployments.               |
++---------------------------------------------------------------------------------------+
+```
+
+### Potential Future Agents Catalog
+Future development sprints can register any of these specialized agents via `agentRegistry.register({...})` without altering the core runtime:
+1. **Sales Agent:** Lead qualification, objection handling, conversion rate analytics.
+2. **Booking Agent:** Hotel slot reservation, transport coordination, inventory holding.
+3. **Customer Support Agent:** 24/7 Ghat guides, itinerary questions, Aarti schedule guidance.
+4. **Finance Agent:** Advance reconciliation, balance alerts, payment gateway verification.
+5. **Document Agent:** Automated voucher generation, travel itinerary PDF dispatch.
+6. **Marketing Agent:** SEO keyword intelligence, targeted seasonal campaign drafting.
+7. **Analytics Agent:** Inbound inquiry cohorts, driver performance, margin optimization.
+8. **Research Agent:** Competitor pricing discovery, local festival alerts, regulatory updates.
+9. **Operations Agent:** Driver dispatch, airport transfer logistics, emergency helpline.
+
+---
+
 <div align="center">
   <b>Kashi-Vashi Travel OS</b> — Ready for Production 🚩
 </div>
+

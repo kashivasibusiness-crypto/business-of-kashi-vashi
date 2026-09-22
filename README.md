@@ -184,7 +184,7 @@ Compiled production bundles will output to `/dist`, ready for static web hosting
 | **Official Domain** | [https://varanasiyatra.com](https://varanasiyatra.com) |
 | **Customer Support Phone** | [+91 84005 54029](tel:+918400554029) |
 | **Official WhatsApp Desk** | [+91 81497 83494](https://wa.me/918149783494) |
-| **Official Email** | [info.varanasi.yatra@gmail.com](mailto:info.varanasi.yatra@gmail.com) |
+| **Official Email** | [kashivasi.business@gmail.com](mailto:kashivasi.business@gmail.com) |
 | **Official Instagram** | [@info.varanasi.yatra](https://www.instagram.com/info.varanasi.yatra/) |
 | **GitHub Repository** | [kashivasibusiness-crypto/business-of-kashi-vashi](https://github.com/kashivasibusiness-crypto/business-of-kashi-vashi) |
 

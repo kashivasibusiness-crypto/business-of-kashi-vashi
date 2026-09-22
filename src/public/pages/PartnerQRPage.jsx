@@ -4,6 +4,7 @@ import SEO from '../seo/SEO';
 import QuickTripPlanner from '../components/QuickTripPlanner';
 import { trackWhatsAppClick, trackQRScan } from '../utils/analytics';
 import { setPartnerAttribution } from '../utils/attribution';
+import { BASE_URL } from '../../constants/crm';
 
 export default function PartnerQRPage() {
     const { partnerId } = useParams();
@@ -27,7 +28,7 @@ export default function PartnerQRPage() {
 
         async function fetchPartner() {
             try {
-                const res = await fetch(`/public/partners/${normalizedId}`);
+                const res = await fetch(`${BASE_URL}/public/partners/${normalizedId}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (isMounted) {
@@ -45,7 +46,7 @@ export default function PartnerQRPage() {
                             const sessionKey = `vy_scanned_${data.partner.partnerCode}`;
                             if (typeof window !== 'undefined' && !window.sessionStorage.getItem(sessionKey)) {
                                 window.sessionStorage.setItem(sessionKey, '1');
-                                fetch(`/public/partners/${data.partner.partnerCode}/scan`, { method: 'POST' }).catch(() => {});
+                                fetch(`${BASE_URL}/public/partners/${data.partner.partnerCode}/scan`, { method: 'POST' }).catch(() => {});
                             }
                             trackQRScan(data.partner.partnerCode, qrId);
                         } else {
@@ -227,7 +228,7 @@ export default function PartnerQRPage() {
                         <span>💬</span>
                     </a>
                     <div className="text-[11px] text-stone-500">
-                        Or speak with our desk: <a href="tel:+918400554029" className="text-amber-800 font-bold font-mono hover:underline">+91 84005 54029</a> · Email: <a href="mailto:info.varanasi.yatra@gmail.com" className="hover:underline">info.varanasi.yatra@gmail.com</a>
+                        Or speak with our desk: <a href="tel:+918400554029" className="text-amber-800 font-bold font-mono hover:underline">+91 84005 54029</a> · Email: <a href="mailto:kashivasi.business@gmail.com" className="hover:underline">kashivasi.business@gmail.com</a>
                     </div>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { trackTripPlannerStart, trackTripPlannerSubmit, trackWhatsAppClick } from '../utils/analytics';
 import { getAttribution } from '../utils/attribution';
+import { BASE_URL } from '../../constants/crm';
 
 const REQUIREMENT_OPTIONS = [
     { id: 'darshan', label: 'Temple Darshan (VIP / Sugam)', icon: '🕉️' },
@@ -122,7 +123,7 @@ export default function QuickTripPlanner({
 
         try {
             // 1. Semantic Public Lead endpoint
-            const res = await fetch('/public/leads', {
+            const res = await fetch(`${BASE_URL}/public/leads`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -138,7 +139,7 @@ export default function QuickTripPlanner({
                 });
             } else {
                 // 2. Fallback to legacy endpoint if /public/leads is unreachable
-                const fallbackRes = await fetch('/api/enquiry', {
+                const fallbackRes = await fetch(`${BASE_URL}/api/enquiry`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

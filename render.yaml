@@ -1,10 +1,11 @@
 services:
   - type: web
-    name: varanasi-yatra-backend
+    name: kashi-vashi-backend
     env: node
     plan: free
-    buildCommand: cd backend && npm install --omit=dev
-    startCommand: node backend/server.js
+    rootDir: backend
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

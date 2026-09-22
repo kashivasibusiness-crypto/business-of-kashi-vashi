@@ -4,6 +4,7 @@ import SEO from '../seo/SEO';
 import QuickTripPlanner from '../components/QuickTripPlanner';
 import { trackWhatsAppClick, trackQRScan } from '../utils/analytics';
 import { setAreaQrAttribution } from '../utils/attribution';
+import { BASE_URL } from '../../constants/crm';
 
 export default function AreaQRLanding() {
     const { qrId } = useParams();
@@ -26,7 +27,7 @@ export default function AreaQRLanding() {
 
         async function resolveQR() {
             try {
-                const res = await fetch(`/public/qr/${normalizedQrId}`);
+                const res = await fetch(`${BASE_URL}/public/qr/${normalizedQrId}`);
                 const data = await res.json();
 
                 if (!isMounted) return;
@@ -65,7 +66,7 @@ export default function AreaQRLanding() {
                 const sessionKey = `vy_qr_scanned_${qr.qrId}`;
                 if (typeof window !== 'undefined' && !window.sessionStorage.getItem(sessionKey)) {
                     window.sessionStorage.setItem(sessionKey, '1');
-                    fetch(`/public/qr/${qr.qrId}/scan`, { method: 'POST' }).catch(() => {});
+                    fetch(`${BASE_URL}/public/qr/${qr.qrId}/scan`, { method: 'POST' }).catch(() => {});
                 }
 
                 trackQRScan(qr.areaName || 'AREA_QR', qr.qrId);

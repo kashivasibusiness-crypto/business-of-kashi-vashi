@@ -7,6 +7,7 @@ import { TextArea } from '../ui/Input';
 import { crmApi } from '../../../services/crmApi';
 import { formatSafeDate, safeDateOnly } from '../../../utils/dateUtils';
 import RecordPaymentModal from './RecordPaymentModal';
+import { BASE_URL } from '../../../constants/crm';
 
 function getCategoryIcon(category) {
     const cat = (category || '').toUpperCase();
@@ -207,7 +208,6 @@ export default function BookingDetailsDrawer({
             });
 
             if (res.success && res.document) {
-                const BASE_URL = import.meta.env.VITE_API_URL || 'https://api-gzo7qrxiuq-uc.a.run.app';
                 const directPdfUrl = `${BASE_URL}/admin/documents/${res.document.documentId}?download=true&token=${token}`;
                 window.open(directPdfUrl, '_blank');
             } else {

@@ -12,7 +12,7 @@ const BRAND_HEADER = `
         <div style="text-align: right; color: #cbd5e1; font-size: 11px; line-height: 1.5;">
             <div>Dashashwamedh Ghat Road, Varanasi, UP 221001</div>
             <div>Phone: +91 84005 54029 | WhatsApp: +91 81497 83494</div>
-            <div>info.varanasi.yatra@gmail.com | https://varanasiyatra.com</div>
+            <div>kashivasi.business@gmail.com | https://varanasiyatra.com</div>
         </div>
     </div>
 </div>
@@ -21,7 +21,7 @@ const BRAND_HEADER = `
 const FOOTER_NOTE = `
 <div style="margin-top: 36px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 10px; font-family: sans-serif; line-height: 1.6;">
     <div style="font-weight: 700; color: #334155; margin-bottom: 4px;">Kashi-Vashi · Authentic Pilgrimages & Custom Tours</div>
-    <div>Phone: +91 84005 54029 · WhatsApp: +91 81497 83494 · Email: info.varanasi.yatra@gmail.com</div>
+    <div>Phone: +91 84005 54029 · WhatsApp: +91 81497 83494 · Email: kashivasi.business@gmail.com</div>
     <div>Instagram: @info.varanasi.yatra · Website: https://varanasiyatra.com</div>
     <div style="margin-top: 6px; font-size: 9px; color: #94a3b8;">Computer Generated Official Document — Kashi-Vashi Travel OS</div>
 </div>
