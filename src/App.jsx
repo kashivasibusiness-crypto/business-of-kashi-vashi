@@ -52,10 +52,18 @@ function ScrollToTop() {
 // CRM Loading Fallback
 function CRMLoading() {
     return (
-        <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-stone-200">
-            <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mb-4" />
-            <span className="text-xs font-mono tracking-wider uppercase text-stone-400">
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-200 select-none">
+            <div className="relative flex items-center justify-center mb-5">
+                <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-400 rounded-full animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center text-xs text-amber-300">
+                    📖
+                </div>
+            </div>
+            <span className="text-xs font-serif tracking-widest uppercase text-amber-300/80 font-semibold">
                 Loading Operations Workspace...
+            </span>
+            <span className="text-[10px] font-mono text-slate-500 mt-1">
+                Kashi Vashi CRM Core
             </span>
         </div>
     );
