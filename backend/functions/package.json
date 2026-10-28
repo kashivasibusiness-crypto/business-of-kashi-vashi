@@ -26,7 +26,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^9.0.3"
+    "nodemailer": "^9.0.3",
+    "pdfkit": "^0.20.2"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.4.1"

@@ -1,5 +1,5 @@
 const BaseDocumentProvider = require('./BaseDocumentProvider');
-const { renderHTMLForDocument } = require('./documentTemplates');
+const { generatePDFBuffer } = require('./pdfDocumentBuilder');
 
 class LocalPDFProvider extends BaseDocumentProvider {
     constructor() {
@@ -7,12 +7,11 @@ class LocalPDFProvider extends BaseDocumentProvider {
     }
 
     async generatePDF(documentType, data, options = {}) {
-        const htmlContent = renderHTMLForDocument(documentType, data);
-        
-        // Convert HTML template into binary buffer format for PDF delivery
-        const buffer = Buffer.from(htmlContent, 'utf-8');
-        const docId = data.documentId || data.bookingId || data.quoteId || 'DOC';
+        const docId = data?.documentId || data?.bookingId || data?.quoteId || 'DOC';
         const fileName = `${documentType}_${docId}.pdf`;
+
+        // Generate genuine binary PDF buffer using PDFKit engine
+        const buffer = await generatePDFBuffer(documentType, data, options);
 
         return {
             buffer,

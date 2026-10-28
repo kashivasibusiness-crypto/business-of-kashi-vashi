@@ -40,6 +40,13 @@ export const EMAIL_URL = 'mailto:kashivasi.business@gmail.com';
 export const INSTAGRAM_HANDLE = '@info.varanasi.yatra';
 export const INSTAGRAM_URL = 'https://www.instagram.com/info.varanasi.yatra/';
 
+export const VLOG_URL = 'https://kashi-vashi.blogspot.com/';
+export const BLOG_URL = 'https://kashi-vashi.blogspot.com/';
+
+export const GOOGLE_REVIEW_URL = 'https://g.page/r/CUSrn3bWu7zlEBM/review';
+export const GOOGLE_BUSINESS_URL = 'https://g.page/r/CUSrn3bWu7zlEBM';
+export const GOOGLE_BUSINESS_NAME = 'Kashi Vashi Spiritual and Heritage Services';
+
 export const WEBSITE_URL = 'https://varanasiyatra.com';
 
 export const BRAND_CONFIG = {
@@ -59,6 +66,11 @@ export const BRAND_CONFIG = {
     emailUrl: EMAIL_URL,
     instagram: INSTAGRAM_HANDLE,
     instagramUrl: INSTAGRAM_URL,
+    vlogUrl: VLOG_URL,
+    blogUrl: BLOG_URL,
+    googleReviewUrl: GOOGLE_REVIEW_URL,
+    googleBusinessUrl: GOOGLE_BUSINESS_URL,
+    googleBusinessName: GOOGLE_BUSINESS_NAME,
     website: WEBSITE_URL
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { trackTripPlannerStart, trackTripPlannerSubmit, trackWhatsAppClick } from '../utils/analytics';
 import { getAttribution } from '../utils/attribution';
 import { BASE_URL } from '../../constants/crm';
@@ -34,6 +34,7 @@ export default function QuickTripPlanner({
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const isSubmittingRef = useRef(false);
     const [submitted, setSubmitted] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [startedTracking, setStartedTracking] = useState(false);
@@ -63,109 +64,239 @@ export default function QuickTripPlanner({
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setErrorMessage('');
-
-        // Validation
-        if (!formData.name.trim() || formData.name.trim().length < 2) {
-            setErrorMessage('Please enter your full name (minimum 2 characters).');
-            return;
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
         }
 
-        const phoneClean = formData.phone.replace(/[^0-9]/g, '');
-        if (phoneClean.length < 10) {
-            setErrorMessage('Please enter a valid 10-digit mobile number.');
-            return;
-        }
-
-        if (formData.email.trim()) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(formData.email.trim())) {
-                setErrorMessage('Please enter a valid email address.');
-                return;
-            }
-        }
-
+        // Synchronous guard against rapid double-clicks and concurrent race conditions
+        if (isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
         setIsSubmitting(true);
+        setErrorMessage('');
 
         const attr = getAttribution();
         const finalSource = partnerId ? 'HOTEL_QR' : (attr.source || 'WEBSITE');
         const finalPartnerId = partnerId || attr.partnerId || null;
         const finalQrId = qrId || attr.qrId || null;
 
-        const payload = {
-            name: formData.name.trim(),
-            phone: formData.phone.trim(),
-            email: formData.email.trim() || undefined,
-            travelDate: formData.travelDate || 'Flexible / Upcoming',
-            guests: formData.guests,
-            duration: formData.duration,
-            comingFrom: formData.comingFrom.trim() || 'Not specified',
-            requirements: formData.requirements,
-            source: finalSource,
-            leadSource: (finalSource === 'HOTEL_QR' || finalSource === 'AREA_QR' || finalQrId) ? 'QR' : 'Website',
-            partnerId: finalPartnerId,
-            qrId: finalQrId,
-            areaId: attr.areaId || undefined,
-            areaName: attr.areaName || undefined,
-            qrType: attr.qrType || undefined,
-            qrAttribution: attr.qrAttribution || undefined,
-            landingPath: typeof window !== 'undefined' ? window.location.pathname : '',
-            utm: {
-                source: attr.utmSource || null,
-                medium: attr.utmMedium || null,
-                campaign: attr.utmCampaign || null,
-                term: attr.utmTerm || null,
-                content: attr.utmContent || null
-            },
-            website_hp: formData.website_hp
-        };
-
         try {
-            // 1. Semantic Public Lead endpoint
-            const res = await fetch(`${BASE_URL}/public/leads`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            // Validation
+            if (!formData.name.trim() || formData.name.trim().length < 2) {
+                setErrorMessage('Please enter your full name (minimum 2 characters).');
+                return;
+            }
 
-            if (res.ok) {
-                setSubmitted(true);
-                trackTripPlannerSubmit({
-                    success: true,
-                    requirements: formData.requirements,
-                    source: finalSource,
-                    partnerId: finalPartnerId
-                });
-            } else {
-                // 2. Fallback to legacy endpoint if /public/leads is unreachable
-                const fallbackRes = await fetch(`${BASE_URL}/api/enquiry`, {
+            const phoneClean = formData.phone.replace(/[^0-9]/g, '');
+            if (phoneClean.length < 10) {
+                setErrorMessage('Please enter a valid 10-digit mobile number.');
+                return;
+            }
+
+            if (formData.email.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email.trim())) {
+                    setErrorMessage('Please enter a valid email address.');
+                    return;
+                }
+            }
+
+            const payload = {
+                name: formData.name.trim(),
+                phone: formData.phone.trim(),
+                email: formData.email.trim() || undefined,
+                travelDate: formData.travelDate || 'Flexible / Upcoming',
+                guests: formData.guests,
+                duration: formData.duration,
+                comingFrom: formData.comingFrom.trim() || 'Not specified',
+                requirements: formData.requirements,
+                source: finalSource,
+                leadSource: (finalSource === 'HOTEL_QR' || finalSource === 'AREA_QR' || finalQrId) ? 'QR' : 'Website',
+                partnerId: finalPartnerId,
+                qrId: finalQrId,
+                areaId: attr.areaId || undefined,
+                areaName: attr.areaName || undefined,
+                qrType: attr.qrType || undefined,
+                qrAttribution: attr.qrAttribution || undefined,
+                landingPath: typeof window !== 'undefined' ? window.location.pathname : '',
+                utm: {
+                    source: attr.utmSource || null,
+                    medium: attr.utmMedium || null,
+                    campaign: attr.utmCampaign || null,
+                    term: attr.utmTerm || null,
+                    content: attr.utmContent || null
+                },
+                website_hp: formData.website_hp
+            };
+
+            // 1. Primary Semantic Public Lead endpoint
+            let res;
+            let primaryNetworkFailed = false;
+            try {
+                res = await fetch(`${BASE_URL}/public/leads`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: payload.name,
-                        mobile: payload.phone,
-                        email: payload.email,
-                        date: payload.travelDate,
-                        travelers: payload.guests,
-                        destination: 'Varanasi',
-                        specialRequirements: formData.requirements.length > 0 ? formData.requirements.join(', ') : 'Custom Itinerary / To be discussed',
-                        pickup: payload.comingFrom,
-                        leadSource: (finalSource === 'HOTEL_QR' || finalSource === 'AREA_QR' || finalQrId) ? 'QR' : 'Website'
-                    })
+                    body: JSON.stringify(payload)
                 });
+            } catch {
+                primaryNetworkFailed = true;
+            }
 
-                setSubmitted(true);
+            // Case A: Network connection failure during primary request
+            // Do NOT blind-fallback to /api/enquiry: if primary already committed, fallback risks duplicate insertion.
+            // Preserves user form data and allows explicit retry where /public/leads deduplicates within 60s.
+            if (primaryNetworkFailed) {
+                setErrorMessage('Network connection issue: Unable to reach our server. Your entered details are safe — please retry or connect with us on WhatsApp.');
                 trackTripPlannerSubmit({
-                    success: fallbackRes.ok,
+                    success: false,
                     requirements: formData.requirements,
                     source: finalSource,
                     partnerId: finalPartnerId
                 });
+                return;
             }
+
+            // Case B: Primary endpoint returned HTTP 2xx
+            if (res.ok) {
+                let primaryData = null;
+                try {
+                    primaryData = await res.json();
+                } catch {
+                    // Non-JSON or HTML response (e.g. Vercel SPA index.html catch-all rewrite)
+                }
+
+                if (primaryData && primaryData.success === true) {
+                    setSubmitted(true);
+                    setErrorMessage('');
+                    trackTripPlannerSubmit({
+                        success: true,
+                        requirements: formData.requirements,
+                        source: finalSource,
+                        partnerId: finalPartnerId
+                    });
+                    return;
+                } else {
+                    // HTTP 200 returned HTML or non-success payload: reject as invalid acceptance
+                    const errMsg = (primaryData && primaryData.message)
+                        ? primaryData.message
+                        : 'Unexpected server response. Please retry or contact us directly on WhatsApp.';
+                    setErrorMessage(errMsg);
+                    trackTripPlannerSubmit({
+                        success: false,
+                        requirements: formData.requirements,
+                        source: finalSource,
+                        partnerId: finalPartnerId
+                    });
+                    return;
+                }
+            }
+
+            // Case C: Client validation or bad request rejection (HTTP 4xx, except 404)
+            // DO NOT FALLBACK for client errors (400 validation, 422, 429 rate limit).
+            if (res.status >= 400 && res.status < 500 && res.status !== 404) {
+                let errMsg = 'Please check the entered details and try again.';
+                try {
+                    const errData = await res.json();
+                    if (errData && errData.message) {
+                        errMsg = errData.message;
+                    }
+                } catch {
+                    // keep default
+                }
+                setErrorMessage(errMsg);
+                trackTripPlannerSubmit({
+                    success: false,
+                    requirements: formData.requirements,
+                    source: finalSource,
+                    partnerId: finalPartnerId
+                });
+                return;
+            }
+
+            // Case D: Endpoint Not Found on Backend (HTTP 404)
+            // Fallback to legacy endpoint /api/enquiry is ONLY safe on 404 because 404 guarantees no write occurred.
+            // On 5xx, we do NOT fallback because primary may have already saved the lead before erroring (which causes duplicates and attribution loss).
+            if (res.status === 404) {
+                let fallbackRes;
+                try {
+                    fallbackRes = await fetch(`${BASE_URL}/api/enquiry`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: payload.name,
+                            mobile: payload.phone,
+                            email: payload.email,
+                            date: payload.travelDate,
+                            travelers: payload.guests,
+                            destination: 'Varanasi',
+                            specialRequirements: formData.requirements.length > 0 ? formData.requirements.join(', ') : 'Custom Itinerary / To be discussed',
+                            pickup: payload.comingFrom,
+                            leadSource: (finalSource === 'HOTEL_QR' || finalSource === 'AREA_QR' || finalQrId) ? 'QR' : 'Website'
+                        })
+                    });
+                } catch {
+                    setErrorMessage('Network connection issue: Unable to reach our server. Your entered details are safe — please retry or connect with us on WhatsApp.');
+                    trackTripPlannerSubmit({
+                        success: false,
+                        requirements: formData.requirements,
+                        source: finalSource,
+                        partnerId: finalPartnerId
+                    });
+                    return;
+                }
+
+                let fallbackData = null;
+                try {
+                    fallbackData = await fallbackRes.json();
+                } catch {
+                    // Non-JSON or HTML
+                }
+
+                if (fallbackRes.ok && fallbackData && fallbackData.success === true) {
+                    setSubmitted(true);
+                    setErrorMessage('');
+                    trackTripPlannerSubmit({
+                        success: true,
+                        requirements: formData.requirements,
+                        source: finalSource,
+                        partnerId: finalPartnerId
+                    });
+                    return;
+                } else {
+                    const errMsg = (fallbackData && fallbackData.message)
+                        ? fallbackData.message
+                        : 'Unable to save your trip enquiry right now. Please retry or connect directly on WhatsApp.';
+                    setErrorMessage(errMsg);
+                    trackTripPlannerSubmit({
+                        success: false,
+                        requirements: formData.requirements,
+                        source: finalSource,
+                        partnerId: finalPartnerId
+                    });
+                    return;
+                }
+            }
+
+            // Case E: Server error (HTTP 5xx, e.g. 500, 502, 503)
+            // Primary failed on server. Do NOT fallback to /api/enquiry (the write may have succeeded in MongoDB).
+            // Direct user to retry (which /public/leads safely deduplicates within 60s) or WhatsApp.
+            let serverErrMsg = 'Server error processing enquiry. Please retry or connect directly on WhatsApp.';
+            try {
+                const errData = await res.json();
+                if (errData && errData.message) {
+                    serverErrMsg = errData.message;
+                }
+            } catch {
+                // keep default
+            }
+            setErrorMessage(serverErrMsg);
+            trackTripPlannerSubmit({
+                success: false,
+                requirements: formData.requirements,
+                source: finalSource,
+                partnerId: finalPartnerId
+            });
         } catch {
-            // Network fallback: mark submitted so traveler can proceed to WhatsApp without frustration
-            setSubmitted(true);
+            setErrorMessage('An unexpected error occurred. Your entered details are safe — please retry or connect with us on WhatsApp.');
             trackTripPlannerSubmit({
                 success: false,
                 requirements: formData.requirements,
@@ -173,6 +304,7 @@ export default function QuickTripPlanner({
                 partnerId: finalPartnerId
             });
         } finally {
+            isSubmittingRef.current = false;
             setIsSubmitting(false);
         }
     };
@@ -262,8 +394,32 @@ export default function QuickTripPlanner({
                 </div>
 
                 {errorMessage && (
-                    <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold">
-                        ⚠️ {errorMessage}
+                    <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs space-y-2">
+                        <div className="flex items-start gap-2 font-semibold">
+                            <span className="text-base leading-none">⚠️</span>
+                            <span>{errorMessage}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <button
+                                type="button"
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer disabled:opacity-50 inline-flex items-center gap-1 shadow-xs"
+                            >
+                                <span>🔄</span>
+                                <span>{isSubmitting ? 'Retrying...' : 'Retry Submission'}</span>
+                            </button>
+                            <a
+                                href={`https://wa.me/918149783494?text=${encodeURIComponent(`Namaste Kashi-Vashi! I tried submitting a trip request on the website, but encountered a connection issue. Can you please assist me?`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => trackWhatsAppClick('trip_planner_error_banner')}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer inline-flex items-center gap-1 shadow-xs"
+                            >
+                                <span>💬</span>
+                                <span>Chat on WhatsApp</span>
+                            </a>
+                        </div>
                     </div>
                 )}
 

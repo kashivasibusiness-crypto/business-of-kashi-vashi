@@ -112,7 +112,7 @@ function validateEnvironment(customEnv = null) {
     const maxFileSizeMb = Number(envSource.MAX_FILE_SIZE_MB) || 10;
     const logLevel = envSource.LOG_LEVEL || (isProduction ? 'info' : 'debug');
     const apiBaseUrl = envSource.API_BASE_URL || `http://localhost:${envSource.PORT || 5001}`;
-    const frontendUrl = envSource.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = envSource.FRONTEND_URL || (isProduction ? 'https://varanasiyatra.com' : 'http://localhost:5173');
 
     return {
         isProduction,

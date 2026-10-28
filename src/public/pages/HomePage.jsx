@@ -7,6 +7,7 @@ import ExperienceCard from '../components/ExperienceCard';
 import TourCard from '../components/TourCard';
 import GuideCard from '../components/GuideCard';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
+import GoogleReviewsSection from '../components/GoogleReviewsSection';
 import { EXPERIENCES } from '../data/experiencesData';
 import { TOURS } from '../data/toursData';
 import { TRAVEL_GUIDES } from '../data/travelGuidesData';
@@ -14,7 +15,7 @@ import { FAQS } from '../data/faqsData';
 import gangaAartiHero from '../../assets/ExperienceVaranasi/GangaAarti.avif';
 import assiMorningImg from '../../assets/ExperienceVaranasi/AssiMorning.avif';
 import { trackWhatsAppClick } from '../utils/analytics';
-import { WHATSAPP_URL } from '../../shared/config/brand';
+import { WHATSAPP_URL, VLOG_URL } from '../../shared/config/brand';
 
 const SERVICE_TAGS = [
     { name: 'Private Boat Rides', icon: '⛵' },
@@ -343,6 +344,9 @@ export default function HomePage() {
                 </div>
             </section>
 
+            {/* 7b. VERIFIED GOOGLE REVIEWS & RATING CTA */}
+            <GoogleReviewsSection />
+
             {/* 8. TRAVEL GUIDES & LOCAL INSIGHTS */}
             <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
@@ -351,13 +355,26 @@ export default function HomePage() {
                         title="Travel Guide & Tips"
                         description="Essential timings, seasonal weather tips, and ghat navigation advice written by people who live here."
                     />
-                    <Link
-                        to="/travel-guide"
-                        className="text-xs font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 transition-colors self-start md:self-end bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-xl border border-amber-200"
-                    >
-                        <span>All Travel Guides</span>
-                        <span aria-hidden="true">→</span>
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-2.5 self-start md:self-end">
+                        <a
+                            href={VLOG_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-bold text-stone-700 hover:text-stone-900 inline-flex items-center gap-1.5 transition-colors bg-white hover:bg-stone-50 px-3.5 py-2 rounded-xl border border-stone-200 shadow-2xs"
+                            title="Visit Official Kashi-Vashi Travel Vlog & Stories on Blogspot"
+                        >
+                            <span>🎥</span>
+                            <span>Travel Vlog &amp; Blog</span>
+                            <span aria-hidden="true">↗</span>
+                        </a>
+                        <Link
+                            to="/travel-guide"
+                            className="text-xs font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 transition-colors bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-xl border border-amber-200"
+                        >
+                            <span>All Travel Guides</span>
+                            <span aria-hidden="true">→</span>
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

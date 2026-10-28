@@ -18,7 +18,7 @@ const INDEX_DEFINITIONS = [
     { collection: 'quotes', spec: { quoteNumber: 1 }, options: { background: true } },
     { collection: 'quotes', spec: { status: 1 }, options: { background: true } },
 
-    { collection: 'bookings', spec: { quoteId: 1 }, options: { background: true } },
+    { collection: 'bookings', spec: { quoteId: 1 }, options: { unique: true, partialFilterExpression: { quoteId: { $type: 'string', $gt: '' } }, background: true } },
     { collection: 'bookings', spec: { bookingNumber: 1 }, options: { unique: true, sparse: true, background: true } },
     { collection: 'bookings', spec: { status: 1 }, options: { background: true } },
     { collection: 'bookings', spec: { createdAt: -1 }, options: { background: true } },

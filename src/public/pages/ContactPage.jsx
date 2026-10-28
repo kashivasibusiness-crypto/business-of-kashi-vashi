@@ -3,7 +3,9 @@ import SEO from '../seo/SEO';
 import Breadcrumb from '../components/Breadcrumb';
 import SectionHeading from '../components/SectionHeading';
 import QuickTripPlanner from '../components/QuickTripPlanner';
+import GoogleVerificationCard from '../components/GoogleVerificationCard';
 import { trackWhatsAppClick, trackCallClick } from '../utils/analytics';
+import { VLOG_URL, INSTAGRAM_URL, INSTAGRAM_HANDLE } from '../../shared/config/brand';
 
 export default function ContactPage() {
     return (
@@ -112,7 +114,7 @@ export default function ContactPage() {
 
                         {/* Instagram */}
                         <a
-                            href="https://www.instagram.com/info.varanasi.yatra/"
+                            href={INSTAGRAM_URL}
                             target="_blank"
                             rel="noreferrer"
                             className="block bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hover:border-pink-500/50 hover:shadow-md transition group"
@@ -126,7 +128,7 @@ export default function ContactPage() {
                                         Instagram · Kashi-Vashi Travel & Tours
                                     </span>
                                     <span className="text-sm font-mono font-bold text-stone-900 group-hover:text-pink-600 transition-colors">
-                                        @info.varanasi.yatra
+                                        {INSTAGRAM_HANDLE}
                                     </span>
                                     <span className="text-[11px] text-stone-500 block mt-0.5">
                                         Follow real-time Varanasi moments, darshan updates & stories
@@ -134,6 +136,37 @@ export default function ContactPage() {
                                 </div>
                             </div>
                         </a>
+
+                        {/* Travel Vlog & Blog Chronicles */}
+                        <a
+                            href={VLOG_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hover:border-orange-500/50 hover:shadow-md transition group"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-xl flex-shrink-0">
+                                    🎥
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-[11px] uppercase font-bold tracking-wider text-orange-700 block">
+                                        Official Travel Vlog &amp; Blog
+                                    </span>
+                                    <span className="text-sm font-mono font-bold text-stone-900 group-hover:text-orange-600 transition-colors block truncate">
+                                        kashi-vashi.blogspot.com
+                                    </span>
+                                    <span className="text-[11px] text-stone-500 block mt-0.5">
+                                        Banaras travel chronicles, temple guides & pilgrimage vlogs
+                                    </span>
+                                </div>
+                                <span className="text-orange-600 group-hover:translate-x-1 transition-transform text-lg font-bold">
+                                    ↗
+                                </span>
+                            </div>
+                        </a>
+
+                        {/* Google Verified Business & Review Card */}
+                        <GoogleVerificationCard />
 
                         {/* Service Area & Operation Hours */}
                         <div className="bg-stone-50 p-6 rounded-3xl border border-stone-200 text-xs text-stone-700 space-y-3">

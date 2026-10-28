@@ -5,6 +5,7 @@ import Breadcrumb from '../components/Breadcrumb';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import assiMorningImg from '../../assets/ExperienceVaranasi/AssiMorning.avif';
 import { trackWhatsAppClick } from '../utils/analytics';
+import { VLOG_URL, INSTAGRAM_URL, INSTAGRAM_HANDLE } from '../../shared/config/brand';
 
 export default function AboutPage() {
     return (
@@ -153,8 +154,10 @@ export default function AboutPage() {
                             <span>📞 +91 84005 54029</span>
                         </a>
                     </div>
-                    <div className="mt-4 text-[11px] text-amber-200">
-                        Follow our spiritual journey on Instagram: <a href="https://www.instagram.com/info.varanasi.yatra/" target="_blank" rel="noreferrer" className="underline font-bold text-white hover:text-amber-100">@info.varanasi.yatra</a> (Kashi-Vashi Travel & Tours)
+                    <div className="mt-4 text-[11px] text-amber-200 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                        <span>Follow on Instagram: <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="underline font-bold text-white hover:text-amber-100">{INSTAGRAM_HANDLE}</a></span>
+                        <span>•</span>
+                        <span>Official Travel Vlog: <a href={VLOG_URL} target="_blank" rel="noopener noreferrer" className="underline font-bold text-white hover:text-amber-100">kashi-vashi.blogspot.com</a></span>
                     </div>
                 </div>
             </article>

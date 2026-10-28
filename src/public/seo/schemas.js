@@ -29,7 +29,8 @@ export const buildOrganizationSchema = () => ({
         "closes": "23:59"
     },
     "sameAs": [
-        "https://www.instagram.com/info.varanasi.yatra/"
+        "https://www.instagram.com/info.varanasi.yatra/",
+        "https://kashi-vashi.blogspot.com/"
     ],
     "priceRange": "₹₹"
 });

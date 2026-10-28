@@ -26,13 +26,14 @@ function assert(condition, testName) {
 // -------------------------------------------------------------
 // 1. LEAD CREATION & STAGE TRACKING
 // -------------------------------------------------------------
+const futureTravelDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 const mockLead = {
     _id: '66a1b2c3d4e5f67890123456',
     name: 'Avaneesh Kumar Sharma',
     mobile: '9876543210',
     email: 'avaneesh@example.com',
     destination: 'Varanasi Yatra VIP',
-    date: '2026-09-20',
+    date: futureTravelDate,
     travelers: '2',
     tripDuration: '3 Days / 2 Nights',
     status: 'In-Progress'

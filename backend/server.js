@@ -42,6 +42,7 @@ const { registerCustomerAssistantRoutes } = require('./modules/ai/customerAssist
 const { registerSalesAssistantRoutes } = require('./modules/ai/salesAssistantRoutes');
 const { registerHunterRoutes } = require('./modules/ai/hunter/hunterRoutes');
 const { Counter, getNextSequence } = require('./utils/idSequence');
+const { validateFrontendUrl, sendPasswordResetEmail } = require('./utils/authEmails');
 
 const env = validateEnvironment();
 const app = express();
@@ -708,6 +709,7 @@ EnquirySchema.index({ createdAt: -1 });
 EnquirySchema.index({ partnerId: 1 });
 BookingSchema.index({ createdAt: -1 });
 BookingSchema.index({ leadId: 1 });
+BookingSchema.index({ quoteId: 1 }, { unique: true, partialFilterExpression: { quoteId: { $type: 'string', $gt: '' } }, background: true });
 QuoteSchema.index({ leadId: 1 });
 QuoteSchema.index({ createdAt: -1 });
 CustomerPaymentSchema.index({ bookingId: 1 });
@@ -1000,37 +1002,41 @@ app.get('/admin/verify-token', authenticateToken, (req, res) => {
 app.post('/auth/forgot-password', loginLimiter, async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ success: false, message: "Email address is required." });
-        }
-        const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user || !user.isActive) {
-            // For security, do not disclose non-existent accounts
-            return res.status(200).json({
-                success: true,
-                message: "If an active account exists with this email, password reset instructions have been generated."
-            });
+        if (!email || typeof email !== 'string') {
+            return res.status(400).json({ success: false, message: "Valid email address is required." });
         }
 
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-        user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour validity
-        await user.save();
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await User.findOne({ email: normalizedEmail });
 
-        console.log(`🔑 [AUTH] Password reset requested for ${user.email}. Reset token generated securely.`);
+        if (user && user.isActive) {
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+            user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour validity
+            await user.save();
 
-        const responseData = {
+            const baseUrl = validateFrontendUrl(env.frontendUrl, env.isProduction);
+
+            // Dispatch reset email asynchronously — failures never expose internal state to caller
+            try {
+                await sendPasswordResetEmail({
+                    toEmail: user.email,
+                    userName: user.name,
+                    resetToken,
+                    baseUrl
+                });
+            } catch (mailErr) {
+                console.error("⚠️ [AUTH] Password reset email dispatch failed:", mailErr.message);
+            }
+        }
+
+        // Generic response ALWAYS: NEVER disclose whether account exists, NEVER leak resetToken
+        return res.status(200).json({
             success: true,
-            emailDelivered: false,
-            deliveryStatus: 'SMTP_NOT_CONFIGURED',
-            message: "Password reset token generated. External SMTP email delivery is not configured in this environment. Configure SMTP credentials for automatic email dispatch."
-        };
-        if (!env.isProduction) {
-            responseData.resetToken = resetToken;
-        }
-        return res.status(200).json(responseData);
+            message: "If an active account exists with this email, password reset instructions have been dispatched."
+        });
     } catch (error) {
-        console.error("Forgot password error:", error);
+        console.error("Forgot password error:", error.message);
         return res.status(500).json({ success: false, message: "Password reset request failed." });
     }
 });
@@ -1043,11 +1049,11 @@ app.post('/auth/reset-password', loginLimiter, async (req, res) => {
         if (!token || !newPassword) {
             return res.status(400).json({ success: false, message: "Reset token and new password are required." });
         }
-        if (newPassword.length < 8) {
+        if (typeof newPassword !== 'string' || newPassword.length < 8) {
             return res.status(400).json({ success: false, message: "New password must be at least 8 characters long." });
         }
 
-        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+        const hashedToken = crypto.createHash('sha256').update(String(token).trim()).digest('hex');
         const user = await User.findOne({
             resetPasswordToken: hashedToken,
             resetPasswordExpires: { $gt: new Date() }
@@ -1071,7 +1077,7 @@ app.post('/auth/reset-password', loginLimiter, async (req, res) => {
             message: "Password has been reset successfully. You can now log in with your new password."
         });
     } catch (error) {
-        console.error("Reset password error:", error);
+        console.error("Reset password error:", error.message);
         return res.status(500).json({ success: false, message: "Password reset failed." });
     }
 });
@@ -2609,6 +2615,28 @@ app.post('/admin/booking/create', authenticateToken, requireRole(['CEO', 'Manage
             booking: retBooking
         });
     } catch (error) {
+        // Handle race-condition duplicate key error on quoteId (MongoDB E11000)
+        if (error.code === 11000 || (error.name === 'MongoServerError' && error.message && error.message.includes('E11000')) || (error.message && error.message.includes('duplicate key'))) {
+            try {
+                const Booking = mongoose.model('Booking', BookingSchema, 'bookings');
+                const conflictingBooking = await Booking.findOne({ quoteId: req.body?.quoteId });
+                if (conflictingBooking) {
+                    const retBooking = req.user?.role === 'CEO' ? conflictingBooking : sanitizeBookingForManager(conflictingBooking);
+                    return res.status(400).json({
+                        success: false,
+                        message: `Booking ${conflictingBooking.bookingNumber || ''} already exists for this accepted quote.`,
+                        booking: retBooking
+                    });
+                }
+            } catch (fetchErr) {
+                console.warn("⚠️ [Booking] Error fetching conflicting booking:", fetchErr.message);
+            }
+            return res.status(400).json({
+                success: false,
+                message: "A booking already exists for this accepted quote."
+            });
+        }
+
         console.error("❌ Create Booking Error:", error);
         return res.status(500).json({ success: false, message: "Booking creation failed." });
     }

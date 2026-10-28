@@ -49,6 +49,19 @@ export default function CRMLoginScreen({ onLoginSuccess }) {
         };
     }, []);
 
+    // Auto-detect resetToken from URL query parameters (e.g. from password-reset email link)
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('resetToken') || params.get('token');
+            if (token) {
+                setResetToken(token.trim());
+                setResetStep(2);
+                setIsForgotPasswordOpen(true);
+            }
+        }
+    }, []);
+
     // Forgot Password Flow State
     const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
@@ -166,10 +179,7 @@ export default function CRMLoginScreen({ onLoginSuccess }) {
         try {
             const res = await crmApi.forgotPassword({ email: resetEmail.trim() });
             if (res.success) {
-                setResetMessage('Reset instructions generated! You can now set a new password.');
-                if (res.resetToken) {
-                    setResetToken(res.resetToken);
-                }
+                setResetMessage(res.message || 'If an account exists with this email, password reset instructions have been dispatched to your email.');
                 setResetStep(2);
             } else {
                 setResetError(res.message || 'Failed to process password reset.');
@@ -731,7 +741,7 @@ export default function CRMLoginScreen({ onLoginSuccess }) {
                                         disabled={resetLoading}
                                         className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition shadow-sm cursor-pointer disabled:opacity-50"
                                     >
-                                        {resetLoading ? 'Generating...' : 'Get Reset Token →'}
+                                        {resetLoading ? 'Sending Instructions...' : 'Send Reset Link →'}
                                     </button>
                                 </div>
                             </form>

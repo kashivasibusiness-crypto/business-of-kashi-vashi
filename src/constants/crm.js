@@ -1,6 +1,8 @@
 const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 const configuredApiUrl = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
-export const BASE_URL = configuredApiUrl || (isLocalhost ? '' : 'http://localhost:5001');
+// Production Cloud Run backend fallback verified in .env.production and deployment configs
+export const FALLBACK_PROD_API = 'https://api-gzo7qrxiuq-uc.a.run.app';
+export const BASE_URL = configuredApiUrl || (isLocalhost ? 'http://localhost:5001' : FALLBACK_PROD_API);
 
 export const STATUS_GRADIENTS = {
     'Completed': 'from-teal-500 to-emerald-600',
