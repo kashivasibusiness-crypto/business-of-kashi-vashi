@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+    "test": "node scripts/test-batch1-enquiry-and-api-url.cjs && node scripts/test-pdf-binary-integrity.cjs && node scripts/test-password-reset-security.cjs && node scripts/test-booking-concurrency-integrity.cjs && node scripts/test-auth-session.js",
     "preview": "vite preview",
     "start:prod": "node backend/server.js",
     "smoke:staging": "node scripts/staging-smoke-test.js",

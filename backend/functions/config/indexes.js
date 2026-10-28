@@ -9,6 +9,11 @@ const INDEX_DEFINITIONS = [
     { collection: 'users', spec: { email: 1 }, options: { unique: true, sparse: true, background: true } },
     { collection: 'users', spec: { role: 1 }, options: { background: true } },
 
+    { collection: 'auth_sessions', spec: { expiresAt: 1 }, options: { expireAfterSeconds: 0, background: true } },
+    { collection: 'auth_sessions', spec: { tokenHash: 1 }, options: { unique: true, background: true } },
+    { collection: 'auth_sessions', spec: { userId: 1 }, options: { background: true } },
+    { collection: 'auth_sessions', spec: { sessionFamilyId: 1 }, options: { background: true } },
+
     { collection: 'enquiries', spec: { mobile: 1 }, options: { background: true } },
     { collection: 'enquiries', spec: { status: 1 }, options: { background: true } },
     { collection: 'enquiries', spec: { stage: 1 }, options: { background: true } },
