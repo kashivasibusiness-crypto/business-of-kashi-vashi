@@ -3,19 +3,18 @@ import { Link } from 'react-router-dom';
 import SEO from '../seo/SEO';
 import SectionHeading from '../components/SectionHeading';
 import QuickTripPlanner from '../components/QuickTripPlanner';
-import ExperienceCard from '../components/ExperienceCard';
 import TourCard from '../components/TourCard';
-import GuideCard from '../components/GuideCard';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import GoogleReviewsSection from '../components/GoogleReviewsSection';
-import { EXPERIENCES } from '../data/experiencesData';
+import FleetSection from '../components/FleetSection';
+import StaySection from '../components/StaySection';
+import WeArrangeSection from '../components/WeArrangeSection';
 import { TOURS } from '../data/toursData';
-import { TRAVEL_GUIDES } from '../data/travelGuidesData';
+import { DESTINATIONS } from '../data/destinationsData';
 import { FAQS } from '../data/faqsData';
-import gangaAartiHero from '../../assets/ExperienceVaranasi/GangaAarti.avif';
-import assiMorningImg from '../../assets/ExperienceVaranasi/AssiMorning.avif';
+import heroImg from '../../assets/hero/hero-ganga-aarti.avif';
 import { trackWhatsAppClick } from '../utils/analytics';
-import { WHATSAPP_URL, VLOG_URL } from '../../shared/config/brand';
+import { WHATSAPP_URL } from '../../shared/config/brand';
 
 const SERVICE_TAGS = [
     { name: 'Private Boat Rides', icon: '⛵' },
@@ -83,7 +82,7 @@ export default function HomePage() {
                 {/* Background image overlay */}
                 <div className="absolute inset-0 z-0 opacity-25 mix-blend-luminosity">
                     <ImageWithSkeleton
-                        src={gangaAartiHero}
+                        src={heroImg}
                         alt="Evening Ganga Aarti at Dashashwamedh Ghat"
                         className="w-full h-full object-cover"
                         priority={true}
@@ -159,44 +158,25 @@ export default function HomePage() {
                 />
             </div>
 
-            {/* 3. POPULAR EXPERIENCES */}
-            <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6">
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-                    <SectionHeading
-                        eyebrow="Curated Varanasi Moments"
-                        title="Popular Experiences"
-                        description="From magical sunrise oars on the holy Ganga to grand evening aarti, discover the soul of the city."
-                    />
-                    <Link
-                        to="/experiences"
-                        className="text-xs font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 transition-colors self-start md:self-end bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-xl border border-amber-200"
-                    >
-                        <span>View All Experiences</span>
-                        <span aria-hidden="true">→</span>
-                    </Link>
-                </div>
+            {/* 3. REVIEWS & EXPERIENCES (Google Trust, Dual QRs, and Verified Devotee Testimonials) */}
+            <div id="reviews-experiences">
+                <GoogleReviewsSection />
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {EXPERIENCES.slice(0, 3).map((exp) => (
-                        <ExperienceCard key={exp.slug} experience={exp} />
-                    ))}
-                </div>
-            </section>
-
-            {/* 4. POPULAR / FEATURED ITINERARIES */}
-            <section className="py-12 sm:py-16 bg-stone-100/70 border-y border-stone-200/80">
+            {/* 4. PROGRAMS (Curated Tour Programs: 1-Day, 2-Day, 3-Day & Circuits) */}
+            <section className="py-14 sm:py-18 bg-stone-100/70 border-y border-stone-200/80">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
                         <SectionHeading
-                            eyebrow="Crafted With Local Care"
-                            title="Featured Tour Itineraries"
-                            description="Thoughtfully paced schedules designed to give you spiritual immersion without temple rush or fatigue."
+                            eyebrow="Curated Pilgrimage Schedules"
+                            title="Our Programs"
+                            description="Paced schedules designed for deep spiritual immersion without temple rush or fatigue."
                         />
                         <Link
                             to="/tours"
                             className="text-xs font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 transition-colors self-start md:self-end bg-white hover:bg-stone-50 px-4 py-2 rounded-xl border border-stone-300"
                         >
-                            <span>Browse All Tours</span>
+                            <span>Browse All Programs</span>
                             <span aria-hidden="true">→</span>
                         </Link>
                     </div>
@@ -210,7 +190,7 @@ export default function HomePage() {
                     <div className="mt-10 bg-white rounded-2xl p-6 border border-stone-200 text-center flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="text-left">
                             <h3 className="font-serif font-bold text-base text-stone-900">
-                                Need a completely customized itinerary?
+                                Need a completely customized program?
                             </h3>
                             <p className="text-xs text-stone-600 mt-0.5">
                                 Arriving with elderly parents, children, or special ritual requirements? We tailor the pace to you.
@@ -220,13 +200,97 @@ export default function HomePage() {
                             to="/plan-your-trip"
                             className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-sm flex-shrink-0"
                         >
-                            Customize Itinerary
+                            Customize Program
                         </Link>
                     </div>
                 </div>
             </section>
 
-            {/* 5. WHY TRAVELERS CHOOSE KASHI-VASHI (Merged Services + Values + Trust) */}
+            {/* 5. VEHICLES & FLEET (4, 7, 10, 12, 16, 20, 25, 30, 40-Seater AC Transport with Popular & Offer Badges) */}
+            <FleetSection />
+
+            {/* 6. DESTINATIONS (Varanasi, Ayodhya, Bodhgaya, Prayagraj, Mirzapur, Lucknow, Ujjain) */}
+            <section className="py-14 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+                    <SectionHeading
+                        eyebrow="Sacred Circuits &amp; Excursions"
+                        title="Destinations We Cover"
+                        description="From the ancient ghats of Kashi to the divine temples of Ayodhya, Bodhgaya, Prayagraj Sangam, and Mirzapur Shaktipeeths."
+                    />
+                    <Link
+                        to="/destinations"
+                        className="text-xs font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 transition-colors self-start md:self-end bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-xl border border-amber-200"
+                    >
+                        <span>View All Destinations</span>
+                        <span aria-hidden="true">→</span>
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {DESTINATIONS.slice(0, 6).map((dest) => (
+                        <div
+                            key={dest.slug}
+                            className="group bg-white rounded-2xl overflow-hidden border border-stone-200/90 shadow-xs hover:shadow-md hover:border-amber-400 transition-all flex flex-col justify-between"
+                        >
+                            <div>
+                                <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
+                                    <img
+                                        src={dest.image}
+                                        alt={dest.alt || dest.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-full border border-stone-700">
+                                        📍 {dest.distanceFromCenter}
+                                    </div>
+                                    <div className="absolute bottom-3 right-3 bg-amber-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        ⏱️ {dest.idealDays}
+                                    </div>
+                                </div>
+
+                                <div className="p-5">
+                                    <h3 className="font-serif font-black text-lg text-stone-900 group-hover:text-amber-700 transition-colors">
+                                        {dest.name}
+                                    </h3>
+                                    <p className="text-xs font-serif italic text-amber-800 mt-0.5">
+                                        {dest.tagline}
+                                    </p>
+                                    <p className="text-xs text-stone-600 mt-2.5 line-clamp-2 leading-relaxed">
+                                        {dest.overview}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-5 pt-0 border-t border-stone-100 flex items-center justify-between mt-auto">
+                                <Link
+                                    to={`/destinations/${dest.slug}`}
+                                    className="text-xs font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1"
+                                >
+                                    <span>Explore Guide</span>
+                                    <span>→</span>
+                                </Link>
+                                <a
+                                    href={`${WHATSAPP_URL}&text=${encodeURIComponent(`Namaste Kashi-Vashi! I want to plan a tour to ${dest.name}. Please share details and cab/hotel packages.`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => trackWhatsAppClick(`dest_${dest.slug}`)}
+                                    className="text-emerald-700 hover:text-emerald-800 text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200"
+                                >
+                                    Inquire Cab / Tour 💬
+                                </a>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* 7. STAY & VERIFIED HOTELS (3★ to 5★ Riverside, Cantt & City Center) */}
+            <StaySection />
+
+            {/* 8. WE ARRANGE (Complete Pilgrim & Heritage Logistics Grid) */}
+            <WeArrangeSection />
+
+            {/* 9. WHY TRAVELERS CHOOSE KASHI-VASHI (Merged Services + Values + Trust) */}
             <section className="py-14 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6">
                 <div className="text-center max-w-2xl mx-auto mb-12">
                     <SectionHeading
@@ -255,12 +319,12 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* 6. HOW IT WORKS (3 Simple Steps) */}
+            {/* 10. HOW IT WORKS (3 Simple Steps) */}
             <section className="py-14 sm:py-20 bg-stone-900 text-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="text-center max-w-2xl mx-auto mb-12">
                         <span className="text-[11px] uppercase tracking-widest font-bold text-amber-400 block mb-2">
-                            Simple & Hassle-Free
+                            Simple &amp; Hassle-Free
                         </span>
                         <h2 className="text-2xl sm:text-3xl font-serif font-black text-white">
                             How It Works
@@ -288,103 +352,7 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* 7. AUTHENTIC TRUST & GUEST REASSURANCE (Honest trust, no fake reviews) */}
-            <section className="py-14 sm:py-18 max-w-7xl mx-auto px-4 sm:px-6">
-                <div className="bg-gradient-to-br from-amber-50/70 via-stone-50 to-white rounded-3xl p-8 sm:p-12 border border-amber-200/60 shadow-sm">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                        <div>
-                            <span className="text-[11px] uppercase tracking-widest font-bold text-amber-800 bg-amber-100/70 px-3 py-1 rounded-full border border-amber-300/40 inline-block mb-3">
-                                Honest Travel Standards
-                            </span>
-                            <h2 className="text-2xl sm:text-3xl font-serif font-black text-stone-900 leading-tight">
-                                Our Promise to Every Pilgrim and Traveler
-                            </h2>
-                            <p className="text-stone-700 text-xs sm:text-sm leading-relaxed mt-4">
-                                We believe in unvarnished honesty. We do not publish fabricated 5-star ratings or exaggerated traveler statistics. Instead, we measure success by the peace of mind our guests experience when navigating the holy city.
-                            </p>
-
-                            <div className="mt-6 space-y-3">
-                                <div className="flex items-start gap-3">
-                                    <span className="text-emerald-600 font-bold text-base mt-0.5">✓</span>
-                                    <p className="text-xs text-stone-700">
-                                        <strong className="text-stone-900">Elderly & Child-Friendly Routes:</strong> We plan ghat access with minimal walking steps and coordinate wheelchairs or e-rickshaws when required.
-                                    </p>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <span className="text-emerald-600 font-bold text-base mt-0.5">✓</span>
-                                    <p className="text-xs text-stone-700">
-                                        <strong className="text-stone-900">Verified Purohits & Ritual Support:</strong> Authentic Sankalp, Rudrabhishek, or Pind Daan rituals conducted with respectful Vedic protocols.
-                                    </p>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <span className="text-emerald-600 font-bold text-base mt-0.5">✓</span>
-                                    <p className="text-xs text-stone-700">
-                                        <strong className="text-stone-900">Direct Local Coordinator:</strong> You have an assigned local manager who verifies your pickup, cab, and boat schedules ahead of time.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="relative rounded-2xl overflow-hidden border border-stone-200 shadow-md aspect-[4/3]">
-                            <ImageWithSkeleton
-                                src={assiMorningImg}
-                                alt="Morning Ghats in Varanasi"
-                                className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent flex items-end p-6">
-                                <div className="text-white">
-                                    <span className="text-amber-400 text-xs font-bold uppercase tracking-wider block">Local Stewardship</span>
-                                    <p className="text-sm font-serif font-bold mt-1">
-                                        "Kashi is not just a destination; it is an awakening. We treat every traveler as a sacred guest."
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 7b. VERIFIED GOOGLE REVIEWS & RATING CTA */}
-            <GoogleReviewsSection />
-
-            {/* 8. TRAVEL GUIDES & LOCAL INSIGHTS */}
-            <section className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6">
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-                    <SectionHeading
-                        eyebrow="Practical Insights"
-                        title="Travel Guide & Tips"
-                        description="Essential timings, seasonal weather tips, and ghat navigation advice written by people who live here."
-                    />
-                    <div className="flex flex-wrap items-center gap-2.5 self-start md:self-end">
-                        <a
-                            href={VLOG_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-bold text-stone-700 hover:text-stone-900 inline-flex items-center gap-1.5 transition-colors bg-white hover:bg-stone-50 px-3.5 py-2 rounded-xl border border-stone-200 shadow-2xs"
-                            title="Visit Official Kashi-Vashi Travel Vlog & Stories on Blogspot"
-                        >
-                            <span>🎥</span>
-                            <span>Travel Vlog &amp; Blog</span>
-                            <span aria-hidden="true">↗</span>
-                        </a>
-                        <Link
-                            to="/travel-guide"
-                            className="text-xs font-bold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 transition-colors bg-amber-50 hover:bg-amber-100 px-4 py-2 rounded-xl border border-amber-200"
-                        >
-                            <span>All Travel Guides</span>
-                            <span aria-hidden="true">→</span>
-                        </Link>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {TRAVEL_GUIDES.map((guide) => (
-                        <GuideCard key={guide.slug} guide={guide} />
-                    ))}
-                </div>
-            </section>
-
-            {/* 9. AUTHENTIC FAQS */}
+            {/* 11. AUTHENTIC FAQS */}
             <section className="py-12 sm:py-16 bg-stone-50 border-t border-stone-200/80">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6">
                     <SectionHeading
@@ -415,7 +383,7 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* 10. FINAL CALL TO ACTION */}
+            {/* 12. FINAL CALL TO ACTION */}
             <section className="py-16 sm:py-20 bg-gradient-to-r from-amber-700 via-orange-600 to-amber-700 text-white text-center">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6">
                     <h2 className="text-2xl sm:text-4xl font-serif font-black mb-4">
@@ -432,7 +400,7 @@ export default function HomePage() {
                             Get Custom Trip Plan
                         </Link>
                         <a
-                            href="https://wa.me/918149783494?text=Namaste%20Varanasi%20Yatra!%20I%20would%20like%20to%20plan%20my%20trip."
+                            href={WHATSAPP_URL}
                             target="_blank"
                             rel="noreferrer"
                             onClick={() => trackWhatsAppClick('final_cta')}

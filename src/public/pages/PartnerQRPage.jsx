@@ -28,7 +28,10 @@ export default function PartnerQRPage() {
 
         async function fetchPartner() {
             try {
-                const res = await fetch(`${BASE_URL}/public/partners/${normalizedId}`);
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch(`${BASE_URL}/public/partners/${normalizedId}`, { signal: controller.signal });
+                clearTimeout(timer);
                 if (res.ok) {
                     const data = await res.json();
                     if (isMounted) {

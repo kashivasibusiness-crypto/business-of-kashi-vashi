@@ -32,7 +32,10 @@ export default function TravelGuideDetailPage() {
     } = guide;
 
     const relatedExperiences = EXPERIENCES.filter((e) =>
-        relatedExperienceSlugs && relatedExperienceSlugs.includes(e.slug)
+        relatedExperienceSlugs && (
+            relatedExperienceSlugs.includes(e.slug) ||
+            (e.aliases && e.aliases.some((a) => relatedExperienceSlugs.includes(a)))
+        )
     );
 
     const relatedGuides = TRAVEL_GUIDES.filter((g) =>

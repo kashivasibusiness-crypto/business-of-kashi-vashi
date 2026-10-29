@@ -9,12 +9,14 @@ export default function SEO({
     title = DEFAULT_TITLE,
     description = DEFAULT_DESC,
     canonicalPath = '',
+    pathname = '',
     ogType = 'website',
     ogImage = DEFAULT_IMAGE,
     noIndex = false,
     schema = null
 }) {
-    const canonicalUrl = canonicalPath ? `${BASE_DOMAIN}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}` : BASE_DOMAIN;
+    const activePath = canonicalPath || pathname || '';
+    const canonicalUrl = activePath ? `${BASE_DOMAIN}${activePath.startsWith('/') ? activePath : `/${activePath}`}` : BASE_DOMAIN;
     const fullOgImage = ogImage.startsWith('http') ? ogImage : `${BASE_DOMAIN}${ogImage.startsWith('/') ? ogImage : `/${ogImage}`}`;
 
     return (

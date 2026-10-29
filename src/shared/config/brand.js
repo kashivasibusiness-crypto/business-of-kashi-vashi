@@ -37,8 +37,16 @@ export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_RAW_NUMBER}?text=${encodeU
 export const EMAIL = 'kashivasi.business@gmail.com';
 export const EMAIL_URL = 'mailto:kashivasi.business@gmail.com';
 
-export const INSTAGRAM_HANDLE = '@info.varanasi.yatra';
-export const INSTAGRAM_URL = 'https://www.instagram.com/info.varanasi.yatra/';
+export const INSTAGRAM_HANDLE = '@kashi_vashi.journeys';
+export const INSTAGRAM_URL = 'https://www.instagram.com/invites/contact/?utm_content=6t3wafh&rpxt=1dj2ihgnxl137';
+
+export const FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=61595953199940';
+
+export const TWITTER_HANDLE = '@KashiVashi_shs';
+export const TWITTER_URL = 'https://x.com/KashiVashi_shs';
+
+export const THREADS_HANDLE = '@kashi_vashi.journeys';
+export const THREADS_URL = 'https://www.threads.net/@kashi_vashi.journeys';
 
 export const VLOG_URL = 'https://kashi-vashi.blogspot.com/';
 export const BLOG_URL = 'https://kashi-vashi.blogspot.com/';
@@ -66,6 +74,11 @@ export const BRAND_CONFIG = {
     emailUrl: EMAIL_URL,
     instagram: INSTAGRAM_HANDLE,
     instagramUrl: INSTAGRAM_URL,
+    facebookUrl: FACEBOOK_URL,
+    twitter: TWITTER_HANDLE,
+    twitterUrl: TWITTER_URL,
+    threads: THREADS_HANDLE,
+    threadsUrl: THREADS_URL,
     vlogUrl: VLOG_URL,
     blogUrl: BLOG_URL,
     googleReviewUrl: GOOGLE_REVIEW_URL,

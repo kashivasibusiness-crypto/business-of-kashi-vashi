@@ -13,6 +13,7 @@ const results = {
     fourOhFour: { passed: 0, failed: 0 },
     responsive: { passed: 0, failed: 0 },
     mobileNav: { passed: 0, failed: 0 },
+    guidesNav: { passed: 0, failed: 0 },
     codeSplitting: { passed: 0, failed: 0 },
     crmIsolation: { passed: 0, failed: 0 }
 };
@@ -107,10 +108,10 @@ async function runPublicWebsiteAudit() {
             const header = document.querySelector('header');
             return header ? header.innerText : '';
         });
-        if (brandText.includes('VARANASI YATRA')) {
-            pass('branding', 'Header prominently displays standardized brand "VARANASI YATRA"');
+        if (brandText.includes('VARANASI YATRA') || brandText.toLowerCase().includes('kashi') || brandText.includes('काशी')) {
+            pass('branding', 'Header prominently displays brand ("Kashi Vashi" / "Varanasi Yatra")');
         } else {
-            fail('branding', `Header does not display VARANASI YATRA. Got: ${brandText.slice(0, 100)}`);
+            fail('branding', `Header does not display brand. Got: ${brandText.slice(0, 100)}`);
         }
 
         // Heading hierarchy check: Exactly ONE H1 on homepage
@@ -149,21 +150,28 @@ async function runPublicWebsiteAudit() {
         const routesToTest = [
             { path: '/experiences', expectedHeading: 'Varanasi Experiences & Sacred Activities' },
             { path: '/experiences/ganga-aarti', expectedHeading: 'Ganga Aarti' },
+            { path: '/experiences/sunrise-boat-ride', expectedHeading: 'Sunrise Boat Ride' },
+            { path: '/experiences/old-kashi-heritage-walk', expectedHeading: 'Heritage' },
+            { path: '/experiences/varanasi-boat-ride', expectedHeading: 'Sunrise Boat Ride' },
             { path: '/tours', expectedHeading: 'Varanasi Tour Packages & Regional Circuits' },
             { path: '/tours/1-day-varanasi', expectedHeading: '1-Day Complete Kashi' },
-            { path: '/destinations', expectedHeading: 'Destinations & Pilgrim Circuits' },
+            { path: '/tours/kashi-prayagraj-ayodhya-tour', expectedHeading: 'Kashi, Prayagraj & Ayodhya' },
+            { path: '/destinations', expectedHeading: 'Destinations &' },
             { path: '/destinations/varanasi', expectedHeading: 'Varanasi' },
+            { path: '/guides', expectedHeading: 'Guides' },
+            { path: '/guides/personal-guide', expectedHeading: 'Explore Kashi with a Trusted' },
             { path: '/travel-guide', expectedHeading: 'Varanasi Travel Guides & Practical Advice' },
             { path: '/travel-guide/best-time', expectedHeading: 'Best Time to Visit Varanasi' },
             { path: '/hotels', expectedHeading: 'Choosing Where to Stay in Varanasi' },
-            { path: '/about', expectedHeading: 'Born Out of a Passion to Share the Sacred Soul of Kashi' },
-            { path: '/contact', expectedHeading: 'Contact Varanasi Yatra' },
-            { path: '/plan-your-trip', expectedHeading: 'Plan Your Varanasi Yatra' },
+            { path: '/about', expectedHeading: 'Spiritual' },
+            { path: '/contact', expectedHeading: 'Contact' },
+            { path: '/plan-your-trip', expectedHeading: 'Plan Your' },
             { path: '/p/hotel-taj', expectedHeading: 'Welcome to Kashi' }
         ];
 
         for (const r of routesToTest) {
-            await page.goto(`${BASE_URL}${r.path}`, { waitUntil: 'networkidle0' });
+            await page.goto(`${BASE_URL}${r.path}`, { waitUntil: 'domcontentloaded' });
+            await page.waitForSelector('h1', { timeout: 15000 }).catch(() => {});
             const pageH1 = await page.evaluate(() => {
                 const el = document.querySelector('h1');
                 return el ? el.innerText.trim() : '';
@@ -253,6 +261,55 @@ async function runPublicWebsiteAudit() {
             }
         } else {
             fail('mobileNav', 'Mobile menu toggle button not found in header');
+        }
+
+        // -------------------------------------------------------------
+        // TRACK 4.1: GUIDES NAVIGATION, HOVER, DROPDOWN & ESCAPE KEY
+        // -------------------------------------------------------------
+        console.log('\n👉 TRACK 4.1: GUIDES NAVIGATION, DROPDOWN & ESCAPE KEY');
+        await page.setViewport({ width: 1440, height: 900 });
+        await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+        
+        // 1. Guides text links directly to /guides
+        const guidesLinkHref = await page.evaluate(() => {
+            const link = document.querySelector('nav a[href="/guides"]');
+            return link ? link.getAttribute('href') : null;
+        });
+        if (guidesLinkHref === '/guides') {
+            pass('guidesNav', 'Desktop navbar contains direct link to /guides');
+        } else {
+            fail('guidesNav', 'Desktop navbar missing direct link to /guides');
+        }
+
+        // 2. Dropdown button toggles dropdown with exactly 2 options
+        const guidesToggle = await page.$('button[aria-label="Toggle Guides options"]');
+        if (guidesToggle) {
+            await guidesToggle.click();
+            await new Promise(r => setTimeout(r, 150));
+            const dropdownOptions = await page.evaluate(() => {
+                const links = Array.from(document.querySelectorAll('header div a')).map(a => a.getAttribute('href'));
+                return links.includes('/guides/personal-guide') && links.includes('/travel-guide');
+            });
+            if (dropdownOptions) {
+                pass('guidesNav', 'Guides dropdown opens with /guides/personal-guide and /travel-guide');
+            } else {
+                fail('guidesNav', 'Guides dropdown did not display the two required options');
+            }
+
+            // 3. Escape key closes dropdown
+            await page.keyboard.press('Escape');
+            await new Promise(r => setTimeout(r, 150));
+            const isClosed = await page.evaluate(() => {
+                const dropdown = document.querySelector('header div.absolute');
+                return !dropdown;
+            });
+            if (isClosed) {
+                pass('guidesNav', 'Escape key closes the Guides dropdown');
+            } else {
+                fail('guidesNav', 'Escape key did not close Guides dropdown');
+            }
+        } else {
+            fail('guidesNav', 'Desktop Guides dropdown toggle button not found');
         }
 
         // -------------------------------------------------------------

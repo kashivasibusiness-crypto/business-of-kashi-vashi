@@ -15,6 +15,8 @@ const DestinationsHubPage = lazy(() => import('./public/pages/DestinationsHubPag
 const DestinationDetailPage = lazy(() => import('./public/pages/DestinationDetailPage'));
 const TravelGuideHubPage = lazy(() => import('./public/pages/TravelGuideHubPage'));
 const TravelGuideDetailPage = lazy(() => import('./public/pages/TravelGuideDetailPage'));
+const GuidesHubPage = lazy(() => import('./public/pages/GuidesHubPage'));
+const PersonalGuidePage = lazy(() => import('./public/pages/PersonalGuidePage'));
 const HotelsPage = lazy(() => import('./public/pages/HotelsPage'));
 const AboutPage = lazy(() => import('./public/pages/AboutPage'));
 const ContactPage = lazy(() => import('./public/pages/ContactPage'));
@@ -116,6 +118,10 @@ export default function App() {
                 {/* Destinations */}
                 <Route path="/destinations" element={<PublicRoute><DestinationsHubPage /></PublicRoute>} />
                 <Route path="/destinations/:slug" element={<PublicRoute><DestinationDetailPage /></PublicRoute>} />
+
+                {/* Guides Section */}
+                <Route path="/guides" element={<PublicRoute><GuidesHubPage /></PublicRoute>} />
+                <Route path="/guides/personal-guide" element={<PublicRoute><PersonalGuidePage /></PublicRoute>} />
 
                 {/* Travel Guide */}
                 <Route path="/travel-guide" element={<PublicRoute><TravelGuideHubPage /></PublicRoute>} />

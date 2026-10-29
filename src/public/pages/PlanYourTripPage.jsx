@@ -4,6 +4,8 @@ import SEO from '../seo/SEO';
 import Breadcrumb from '../components/Breadcrumb';
 import SectionHeading from '../components/SectionHeading';
 import QuickTripPlanner from '../components/QuickTripPlanner';
+import { getExperienceBySlug } from '../data/experiencesData';
+import { getTourBySlug } from '../data/toursData';
 import { trackWhatsAppClick } from '../utils/analytics';
 
 export default function PlanYourTripPage() {
@@ -11,8 +13,30 @@ export default function PlanYourTripPage() {
     const queryParams = new URLSearchParams(location.search);
     const initialExperience = queryParams.get('experience') || '';
     const initialTour = queryParams.get('tour') || '';
+    const initialDestination = queryParams.get('destination') || '';
 
-    const initialRequirement = initialExperience || initialTour || '';
+    let formattedExperience = '';
+    if (initialExperience) {
+        const expObj = getExperienceBySlug(initialExperience);
+        formattedExperience = expObj ? `Experience: ${expObj.title}` : `Experience: ${initialExperience}`;
+    }
+
+    let formattedTour = '';
+    if (initialTour) {
+        const tourObj = getTourBySlug(initialTour);
+        formattedTour = tourObj ? `Tour: ${tourObj.title}` : `Tour: ${initialTour}`;
+    }
+
+    let formattedDestination = '';
+    if (initialDestination) {
+        const cleanName = initialDestination
+            .split('-')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        formattedDestination = `Destination: ${cleanName}`;
+    }
+
+    const initialRequirement = formattedExperience || formattedTour || formattedDestination || '';
 
     return (
         <>
