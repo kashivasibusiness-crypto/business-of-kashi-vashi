@@ -71,14 +71,14 @@ async function runTests() {
     console.log('=======================================================\n');
 
     // ----------------------------------------------------
-    // Test 1: Production CORS includes official domain
+    // Test 1: Production CORS includes exact deployed origin
     // ----------------------------------------------------
     try {
         const envCode = fs.readFileSync(path.join(__dirname, '../backend/config/env.js'), 'utf8');
-        const hasOfficialDomain = envCode.includes('https://varanasiyatra.com') && envCode.includes('https://www.varanasiyatra.com');
-        recordTest(1, 'Production CORS includes official domain', hasOfficialDomain, 'Found varanasiyatra.com and www.varanasiyatra.com');
+        const hasDeployedDomain = envCode.includes('https://varanasi-yatra.vercel.app');
+        recordTest(1, 'Production CORS includes deployed origin', hasDeployedDomain, 'Found https://varanasi-yatra.vercel.app');
     } catch (err) {
-        recordTest(1, 'Production CORS includes official domain', false, err.message);
+        recordTest(1, 'Production CORS includes deployed origin', false, err.message);
     }
 
     // ----------------------------------------------------

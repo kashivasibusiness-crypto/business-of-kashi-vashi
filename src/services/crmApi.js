@@ -49,24 +49,85 @@ export const tokenStorage = {
 
 let refreshPromise = null;
 
+const DEFAULT_TIMEOUT_MS = 45000;
+
+export async function apiFetch(url, options = {}) {
+    const timeout = options.timeoutMs || DEFAULT_TIMEOUT_MS;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+        controller.abort();
+    }, timeout);
+
+    const userSignal = options.signal;
+    if (userSignal) {
+        userSignal.addEventListener('abort', () => controller.abort());
+    }
+
+    const { timeoutMs: _unusedTimeout, ...cleanedOptions } = options;
+    const fetchOptions = {
+        ...cleanedOptions,
+        signal: controller.signal
+    };
+
+    try {
+        const response = await fetch(url, fetchOptions);
+        return response;
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            throw new Error(`Request timed out after ${Math.round(timeout / 1000)}s. The backend server may be waking up from sleep — please retry.`);
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
 const handleResponse = async (response) => {
-    const resData = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    let resData;
+    if (contentType.includes('application/json')) {
+        resData = await response.json();
+    } else {
+        await response.text();
+        throw new Error(`Unexpected server response (${response.status}): Expected JSON but received ${contentType || 'non-JSON content'}.`);
+    }
     if (!response.ok) {
-        throw new Error(resData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(resData?.message || `HTTP error! status: ${response.status}`);
     }
     return resData;
 };
 
 // ⚡ In-Flight Request Deduplication to prevent overlapping concurrent network fetches
 const inFlightRequests = new Map();
+
+async function safeGetWithBoundedRetry(url, options = {}, maxRetries = 1) {
+    let lastError;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await apiFetch(url, { ...options, method: 'GET' });
+            return await handleResponse(response);
+        } catch (err) {
+            lastError = err;
+            const isRetryable = err.name === 'TypeError' || err.message?.includes('waking up') || err.message?.includes('Failed to fetch');
+            if (attempt < maxRetries && isRetryable) {
+                await new Promise((r) => setTimeout(r, 1200));
+                continue;
+            }
+            throw err;
+        }
+    }
+    throw lastError;
+}
+
 function deduplicatedFetch(url, options) {
-    const cacheKey = `${options?.method || 'GET'}:${url}:${options?.headers?.Authorization || ''}`;
+    const method = (options?.method || 'GET').toUpperCase();
+    const cacheKey = `${method}:${url}:${options?.headers?.Authorization || ''}`;
     if (inFlightRequests.has(cacheKey)) {
         return inFlightRequests.get(cacheKey);
     }
-    const promise = fetch(url, options)
-        .then(async (response) => {
-            const data = await handleResponse(response);
+    const isGet = method === 'GET';
+    const promise = (isGet ? safeGetWithBoundedRetry(url, options) : apiFetch(url, options).then(handleResponse))
+        .then((data) => {
             inFlightRequests.delete(cacheKey);
             return data;
         })
@@ -81,7 +142,7 @@ function deduplicatedFetch(url, options) {
 
 export const crmApi = {
     async login({ email, password, loginMode }) {
-        const response = await fetch(`${BASE_URL}/admin/login`, {
+        const response = await apiFetch(`${BASE_URL}/admin/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, loginType: loginMode })
@@ -101,7 +162,7 @@ export const crmApi = {
 
         if (!refreshPromise) {
             refreshPromise = (async () => {
-                const response = await fetch(`${BASE_URL}/auth/refresh`, {
+                const response = await apiFetch(`${BASE_URL}/auth/refresh`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ refreshToken: tokenToUse })
@@ -123,7 +184,7 @@ export const crmApi = {
         const tokenToUse = refreshToken || tokenStorage.getRefreshToken();
         try {
             if (tokenToUse) {
-                await fetch(`${BASE_URL}/auth/logout`, {
+                await apiFetch(`${BASE_URL}/auth/logout`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ refreshToken: tokenToUse })
@@ -138,14 +199,14 @@ export const crmApi = {
 
     async verifySession(token) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/verify-token`, {
+        const response = await apiFetch(`${BASE_URL}/admin/verify-token`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         return handleResponse(response);
     },
 
     async forgotPassword({ email }) {
-        const response = await fetch(`${BASE_URL}/auth/forgot-password`, {
+        const response = await apiFetch(`${BASE_URL}/auth/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
@@ -154,7 +215,7 @@ export const crmApi = {
     },
 
     async resetPassword({ token, newPassword }) {
-        const response = await fetch(`${BASE_URL}/auth/reset-password`, {
+        const response = await apiFetch(`${BASE_URL}/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, newPassword })
@@ -164,7 +225,7 @@ export const crmApi = {
 
     async changePassword(token, { currentPassword, newPassword }) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/auth/change-password`, {
+        const response = await apiFetch(`${BASE_URL}/auth/change-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -177,7 +238,7 @@ export const crmApi = {
 
     async createUser(token, userData) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/users`, {
+        const response = await apiFetch(`${BASE_URL}/admin/users`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -190,7 +251,7 @@ export const crmApi = {
 
     async fetchUsers(token) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/users`, {
+        const response = await apiFetch(`${BASE_URL}/admin/users`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         return handleResponse(response);
@@ -198,7 +259,7 @@ export const crmApi = {
 
     async toggleUserStatus(token, userId, isActive) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/users/${userId}/status`, {
+        const response = await apiFetch(`${BASE_URL}/admin/users/${userId}/status`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -211,7 +272,7 @@ export const crmApi = {
 
     async resetUserPassword(token, userId, temporaryPassword) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/users/${userId}/reset-password`, {
+        const response = await apiFetch(`${BASE_URL}/admin/users/${userId}/reset-password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -224,7 +285,7 @@ export const crmApi = {
 
     async updateUser(token, userId, updateData) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/users/${userId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/users/${userId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -237,7 +298,7 @@ export const crmApi = {
 
     async activateUser(token, userId) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/users/${userId}/activate`, {
+        const response = await apiFetch(`${BASE_URL}/admin/users/${userId}/activate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -249,7 +310,7 @@ export const crmApi = {
 
     async deactivateUser(token, userId) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/users/${userId}/deactivate`, {
+        const response = await apiFetch(`${BASE_URL}/admin/users/${userId}/deactivate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -261,7 +322,7 @@ export const crmApi = {
 
     async fetchTeamOverview(token) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/team/overview`, {
+        const response = await apiFetch(`${BASE_URL}/admin/team/overview`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         return handleResponse(response);
@@ -275,7 +336,7 @@ export const crmApi = {
         if (params.status) query.append('status', params.status);
         if (params.assignedTo) query.append('assignedTo', params.assignedTo);
         const qs = query.toString() ? `?${query.toString()}` : '';
-        const response = await fetch(`${BASE_URL}/admin/team/leads${qs}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/team/leads${qs}`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         return handleResponse(response);
@@ -283,7 +344,7 @@ export const crmApi = {
 
     async assignTeamLead(token, assignmentData) {
         const authToken = token || tokenStorage.getAccessToken();
-        const response = await fetch(`${BASE_URL}/admin/team/leads/assign`, {
+        const response = await apiFetch(`${BASE_URL}/admin/team/leads/assign`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -307,7 +368,7 @@ export const crmApi = {
     },
 
     async updateEnquiry(token, enquiryId, data) {
-        const response = await fetch(`${BASE_URL}/admin/enquiry/update/${enquiryId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/enquiry/update/${enquiryId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -319,7 +380,7 @@ export const crmApi = {
     },
 
     async createManualEnquiry(token, data) {
-        const response = await fetch(`${BASE_URL}/admin/enquiry/manual`, {
+        const response = await apiFetch(`${BASE_URL}/admin/enquiry/manual`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -333,7 +394,7 @@ export const crmApi = {
     // Phase 4 Extensions: Quotes & Vendors
     async fetchQuotes(token, leadId) {
         const url = leadId ? `${BASE_URL}/admin/quotes/lead/${leadId}` : `${BASE_URL}/admin/quotes`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -341,7 +402,7 @@ export const crmApi = {
 
 
     async createQuote(token, quoteData) {
-        const response = await fetch(`${BASE_URL}/admin/quote/create`, {
+        const response = await apiFetch(`${BASE_URL}/admin/quote/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -353,7 +414,7 @@ export const crmApi = {
     },
 
     async updateQuote(token, id, quoteData) {
-        const response = await fetch(`${BASE_URL}/admin/quote/update/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/quote/update/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -371,28 +432,28 @@ export const crmApi = {
         if (search) queryParams.append('search', search);
 
         const url = `${BASE_URL}/admin/vendors?${queryParams.toString()}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchVendorsByCategory(token, category) {
-        const response = await fetch(`${BASE_URL}/admin/vendors/category/${category}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/vendors/category/${category}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchVendor(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/vendor/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/vendor/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async createVendor(token, vendorData) {
-        const response = await fetch(`${BASE_URL}/admin/vendor/create`, {
+        const response = await apiFetch(`${BASE_URL}/admin/vendor/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -404,7 +465,7 @@ export const crmApi = {
     },
 
     async updateVendor(token, id, vendorData) {
-        const response = await fetch(`${BASE_URL}/admin/vendor/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/vendor/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -416,7 +477,7 @@ export const crmApi = {
     },
 
     async updateVendorStatus(token, id, status) {
-        const response = await fetch(`${BASE_URL}/admin/vendor/${id}/status`, {
+        const response = await apiFetch(`${BASE_URL}/admin/vendor/${id}/status`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -428,7 +489,7 @@ export const crmApi = {
     },
 
     async deleteVendor(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/vendor/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/vendor/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -466,21 +527,21 @@ export const crmApi = {
     },
 
     async fetchBooking(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/booking/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchBookingByQuote(token, quoteId) {
-        const response = await fetch(`${BASE_URL}/admin/booking/quote/${quoteId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/quote/${quoteId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async createBooking(token, quoteId) {
-        const response = await fetch(`${BASE_URL}/admin/booking/create`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -492,7 +553,7 @@ export const crmApi = {
     },
 
     async updateBookingStatus(token, id, status, remarks = '') {
-        const response = await fetch(`${BASE_URL}/admin/booking/${id}/status`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/${id}/status`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -504,7 +565,7 @@ export const crmApi = {
     },
 
     async updateBookingChecklist(token, id, serviceCategory, status, notes = '') {
-        const response = await fetch(`${BASE_URL}/admin/booking/${id}/checklist`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/${id}/checklist`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -517,14 +578,14 @@ export const crmApi = {
 
     // Payment & Expense Helpers (Prompt 6)
     async fetchCustomerPayments(token, bookingId) {
-        const response = await fetch(`${BASE_URL}/admin/booking/${bookingId}/customer-payments`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/${bookingId}/customer-payments`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async recordCustomerPayment(token, paymentData) {
-        const response = await fetch(`${BASE_URL}/admin/booking/customer-payment`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/customer-payment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -536,14 +597,14 @@ export const crmApi = {
     },
 
     async fetchVendorPayments(token, bookingId) {
-        const response = await fetch(`${BASE_URL}/admin/booking/${bookingId}/vendor-payments`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/${bookingId}/vendor-payments`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async recordVendorPayment(token, paymentData) {
-        const response = await fetch(`${BASE_URL}/admin/booking/vendor-payment`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/vendor-payment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -560,14 +621,14 @@ export const crmApi = {
         if (category) queryParams.append('category', category);
         if (search) queryParams.append('search', search);
 
-        const response = await fetch(`${BASE_URL}/admin/expenses?${queryParams.toString()}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/expenses?${queryParams.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async recordExpense(token, expenseData) {
-        const response = await fetch(`${BASE_URL}/admin/expense/create`, {
+        const response = await apiFetch(`${BASE_URL}/admin/expense/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -579,7 +640,7 @@ export const crmApi = {
     },
 
     async fetchFinancialSummary(token, bookingId) {
-        const response = await fetch(`${BASE_URL}/admin/booking/${bookingId}/financial-summary`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/${bookingId}/financial-summary`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -587,14 +648,14 @@ export const crmApi = {
 
     // Dashboard Helpers (Prompt 7)
     async fetchManagerDashboard(token) {
-        const response = await fetch(`${BASE_URL}/admin/dashboard/manager`, {
+        const response = await apiFetch(`${BASE_URL}/admin/dashboard/manager`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchCEODashboard(token) {
-        const response = await fetch(`${BASE_URL}/admin/dashboard/ceo`, {
+        const response = await apiFetch(`${BASE_URL}/admin/dashboard/ceo`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -602,7 +663,7 @@ export const crmApi = {
 
     // Security & Auth Session Helpers (Phase 5.1)
     async refreshAccessToken(refreshToken) {
-        const response = await fetch(`${BASE_URL}/auth/refresh`, {
+        const response = await apiFetch(`${BASE_URL}/auth/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken })
@@ -611,7 +672,7 @@ export const crmApi = {
     },
 
     async logoutSession(refreshToken) {
-        const response = await fetch(`${BASE_URL}/auth/logout`, {
+        const response = await apiFetch(`${BASE_URL}/auth/logout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refreshToken })
@@ -620,7 +681,7 @@ export const crmApi = {
     },
 
     async logoutAllSessions(token) {
-        const response = await fetch(`${BASE_URL}/auth/logout-all`, {
+        const response = await apiFetch(`${BASE_URL}/auth/logout-all`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -632,14 +693,14 @@ export const crmApi = {
 
     // ⚡ Automation Center API Methods (Phase 5.2)
     async fetchAutomationSettings(token) {
-        const response = await fetch(`${BASE_URL}/admin/automation/settings`, {
+        const response = await apiFetch(`${BASE_URL}/admin/automation/settings`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateAutomationSettings(token, enabled) {
-        const response = await fetch(`${BASE_URL}/admin/automation/settings`, {
+        const response = await apiFetch(`${BASE_URL}/admin/automation/settings`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -651,7 +712,7 @@ export const crmApi = {
     },
 
     async fetchAutomationTemplates(token) {
-        const response = await fetch(`${BASE_URL}/admin/automation/templates`, {
+        const response = await apiFetch(`${BASE_URL}/admin/automation/templates`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -663,7 +724,7 @@ export const crmApi = {
             : `${BASE_URL}/admin/automation/templates`;
         const method = templateData._id || templateData.templateId ? 'PUT' : 'POST';
 
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             method,
             headers: {
                 'Content-Type': 'application/json',
@@ -676,14 +737,14 @@ export const crmApi = {
 
     async fetchAutomationLogs(token, filter = {}) {
         const query = new URLSearchParams(filter).toString();
-        const response = await fetch(`${BASE_URL}/admin/automation/logs${query ? `?${query}` : ''}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/automation/logs${query ? `?${query}` : ''}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async retryAutomationLog(token, logId) {
-        const response = await fetch(`${BASE_URL}/admin/automation/retry/${logId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/automation/retry/${logId}`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -691,7 +752,7 @@ export const crmApi = {
     },
 
     async previewAutomationMessage(token, previewData) {
-        const response = await fetch(`${BASE_URL}/admin/automation/preview`, {
+        const response = await apiFetch(`${BASE_URL}/admin/automation/preview`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -705,14 +766,14 @@ export const crmApi = {
     // 📄 Document Engine API Methods (Phase 5.3)
     async fetchDocuments(token, filter = {}) {
         const query = new URLSearchParams(filter).toString();
-        const response = await fetch(`${BASE_URL}/admin/documents${query ? `?${query}` : ''}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/documents${query ? `?${query}` : ''}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async generateDocument(token, docData) {
-        const response = await fetch(`${BASE_URL}/admin/documents/generate`, {
+        const response = await apiFetch(`${BASE_URL}/admin/documents/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -724,7 +785,7 @@ export const crmApi = {
     },
 
     async regenerateDocument(token, documentId) {
-        const response = await fetch(`${BASE_URL}/admin/documents/${documentId}/regenerate`, {
+        const response = await apiFetch(`${BASE_URL}/admin/documents/${documentId}/regenerate`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -732,7 +793,7 @@ export const crmApi = {
     },
 
     async shareDocument(token, documentId, options = {}) {
-        const response = await fetch(`${BASE_URL}/admin/documents/${documentId}/share`, {
+        const response = await apiFetch(`${BASE_URL}/admin/documents/${documentId}/share`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -744,7 +805,7 @@ export const crmApi = {
     },
 
     async archiveDocument(token, documentId) {
-        const response = await fetch(`${BASE_URL}/admin/documents/${documentId}/archive`, {
+        const response = await apiFetch(`${BASE_URL}/admin/documents/${documentId}/archive`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -753,7 +814,7 @@ export const crmApi = {
 
     // File Attachment & Infrastructure API Helpers (Phase 5.4)
     async uploadFile(token, fileData) {
-        const response = await fetch(`${BASE_URL}/admin/files/upload`, {
+        const response = await apiFetch(`${BASE_URL}/admin/files/upload`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -769,14 +830,14 @@ export const crmApi = {
         if (entityType) queryParams.append('entityType', entityType);
         if (entityId) queryParams.append('entityId', entityId);
 
-        const response = await fetch(`${BASE_URL}/admin/files?${queryParams.toString()}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/files?${queryParams.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async deleteFile(token, attachmentId) {
-        const response = await fetch(`${BASE_URL}/admin/files/${attachmentId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/files/${attachmentId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -784,14 +845,14 @@ export const crmApi = {
     },
 
     async fetchBookingProfit(token, bookingId) {
-        const response = await fetch(`${BASE_URL}/admin/booking/${bookingId}/financial-summary`, {
+        const response = await apiFetch(`${BASE_URL}/admin/booking/${bookingId}/financial-summary`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchSystemHealth(token) {
-        const response = await fetch(`${BASE_URL}/admin/system/health`, {
+        const response = await apiFetch(`${BASE_URL}/admin/system/health`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -799,14 +860,14 @@ export const crmApi = {
 
     // 🏨 Hotel Partner & QR Management API (Phase 3)
     async fetchHotelPartners(token) {
-        const response = await fetch(`${BASE_URL}/admin/hotel-partners`, {
+        const response = await apiFetch(`${BASE_URL}/admin/hotel-partners`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async createHotelPartner(token, partnerData) {
-        const response = await fetch(`${BASE_URL}/admin/hotel-partners`, {
+        const response = await apiFetch(`${BASE_URL}/admin/hotel-partners`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -818,7 +879,7 @@ export const crmApi = {
     },
 
     async updateHotelPartner(token, id, partnerData) {
-        const response = await fetch(`${BASE_URL}/admin/hotel-partners/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/hotel-partners/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -831,7 +892,7 @@ export const crmApi = {
 
     // 🌐 Dynamic QR Network API (Prompt 4)
     async fetchQrAreas(token) {
-        const response = await fetch(`${BASE_URL}/admin/qr/areas`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/areas`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const res = await handleResponse(response);
@@ -842,7 +903,7 @@ export const crmApi = {
     },
 
     async createQrArea(token, areaData) {
-        const response = await fetch(`${BASE_URL}/admin/qr/areas`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/areas`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -854,14 +915,14 @@ export const crmApi = {
     },
 
     async fetchQrArea(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/qr/areas/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/areas/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateQrArea(token, id, areaData) {
-        const response = await fetch(`${BASE_URL}/admin/qr/areas/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/areas/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -873,7 +934,7 @@ export const crmApi = {
     },
 
     async updateQrAreaStatus(token, id, status) {
-        const response = await fetch(`${BASE_URL}/admin/qr/areas/${id}/status`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/areas/${id}/status`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -887,7 +948,7 @@ export const crmApi = {
     async fetchQrRecords(token, filters = {}) {
         const query = new URLSearchParams(filters).toString();
         const url = `${BASE_URL}/admin/qr${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const res = await handleResponse(response);
@@ -898,7 +959,7 @@ export const crmApi = {
     },
 
     async createQrRecord(token, qrData) {
-        const response = await fetch(`${BASE_URL}/admin/qr`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -910,14 +971,14 @@ export const crmApi = {
     },
 
     async fetchQrRecord(token, qrId) {
-        const response = await fetch(`${BASE_URL}/admin/qr/${qrId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/${qrId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateQrRecord(token, qrId, data) {
-        const response = await fetch(`${BASE_URL}/admin/qr/${qrId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/${qrId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -929,7 +990,7 @@ export const crmApi = {
     },
 
     async generateQr(token, qrId) {
-        const response = await fetch(`${BASE_URL}/admin/qr/${qrId}/generate`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/${qrId}/generate`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -937,7 +998,7 @@ export const crmApi = {
     },
 
     async markQrInstalled(token, qrId, installData = {}) {
-        const response = await fetch(`${BASE_URL}/admin/qr/${qrId}/install`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/${qrId}/install`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -949,7 +1010,7 @@ export const crmApi = {
     },
 
     async markQrDamaged(token, qrId, damageData = {}) {
-        const response = await fetch(`${BASE_URL}/admin/qr/${qrId}/damage`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/${qrId}/damage`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -961,7 +1022,7 @@ export const crmApi = {
     },
 
     async createQrReplacement(token, qrId, replacementData = {}) {
-        const response = await fetch(`${BASE_URL}/admin/qr/${qrId}/replace`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/${qrId}/replace`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -973,7 +1034,7 @@ export const crmApi = {
     },
 
     async deactivateQr(token, qrId, data = {}) {
-        const response = await fetch(`${BASE_URL}/admin/qr/${qrId}/deactivate`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/${qrId}/deactivate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -987,26 +1048,26 @@ export const crmApi = {
     async fetchQrAnalytics(token, params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${BASE_URL}/admin/qr/analytics${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchAreaQrAnalytics(token, areaId) {
-        const response = await fetch(`${BASE_URL}/admin/qr/analytics/areas/${areaId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/qr/analytics/areas/${areaId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchPublicQr(qrId) {
-        const response = await fetch(`${BASE_URL}/public/qr/${qrId}`);
+        const response = await apiFetch(`${BASE_URL}/public/qr/${qrId}`);
         return handleResponse(response);
     },
 
     async recordPublicQrScan(qrId) {
-        const response = await fetch(`${BASE_URL}/public/qr/${qrId}/scan`, {
+        const response = await apiFetch(`${BASE_URL}/public/qr/${qrId}/scan`, {
             method: 'POST'
         });
         return handleResponse(response);
@@ -1016,19 +1077,19 @@ export const crmApi = {
     // AI FOUNDATION & CEO CONTROL CENTER (Prompt 5)
     // -------------------------------------------------------------
     async fetchAiHealth() {
-        const response = await fetch(`${BASE_URL}/admin/ai/health`);
+        const response = await apiFetch(`${BASE_URL}/admin/ai/health`);
         return handleResponse(response);
     },
 
     async fetchAiConfig(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/config`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/config`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateAiConfig(token, configData) {
-        const response = await fetch(`${BASE_URL}/admin/ai/config`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/config`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1040,7 +1101,7 @@ export const crmApi = {
     },
 
     async toggleAiEmergencyStop(token, active) {
-        const response = await fetch(`${BASE_URL}/admin/ai/config/emergency-stop`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/config/emergency-stop`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1052,7 +1113,7 @@ export const crmApi = {
     },
 
     async toggleAiSafeMode(token, enabled) {
-        const response = await fetch(`${BASE_URL}/admin/ai/config/safe-mode`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/config/safe-mode`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1064,7 +1125,7 @@ export const crmApi = {
     },
 
     async toggleAiMaster(token, enabled) {
-        const response = await fetch(`${BASE_URL}/admin/ai/config/master-toggle`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/config/master-toggle`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1076,7 +1137,7 @@ export const crmApi = {
     },
 
     async executeAiRun(token, runPayload) {
-        const response = await fetch(`${BASE_URL}/admin/ai/run`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/run`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1090,14 +1151,14 @@ export const crmApi = {
     async fetchAiRuns(token, params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${BASE_URL}/admin/ai/runs${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchAiRunDetails(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/ai/runs/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/runs/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -1106,7 +1167,7 @@ export const crmApi = {
     async fetchAiAuditLogs(token, params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${BASE_URL}/admin/ai/audit${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -1115,14 +1176,14 @@ export const crmApi = {
     async fetchAiOpportunities(token, params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${BASE_URL}/admin/ai/opportunities${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateAiOpportunity(token, id, data) {
-        const response = await fetch(`${BASE_URL}/admin/ai/opportunities/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/opportunities/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1134,7 +1195,7 @@ export const crmApi = {
     },
 
     async fetchAiAssistantMetrics(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/assistant/metrics`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/assistant/metrics`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -1144,7 +1205,7 @@ export const crmApi = {
     // AI Sales Assistant Endpoints (Prompt 7)
     // -------------------------------------------------------------
     async analyzeLeadWithAi(token, leadId, additionalNotes = '') {
-        const response = await fetch(`${BASE_URL}/admin/ai/sales/analyze-lead`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/sales/analyze-lead`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1156,7 +1217,7 @@ export const crmApi = {
     },
 
     async generateAiFollowUp(token, leadId, options = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/sales/generate-followup`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/sales/generate-followup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1168,7 +1229,7 @@ export const crmApi = {
     },
 
     async analyzeAiObjection(token, leadId, customerText) {
-        const response = await fetch(`${BASE_URL}/admin/ai/sales/analyze-objection`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/sales/analyze-objection`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1180,7 +1241,7 @@ export const crmApi = {
     },
 
     async prepareAiQuoteInputs(token, leadId) {
-        const response = await fetch(`${BASE_URL}/admin/ai/sales/prepare-quote-inputs`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/sales/prepare-quote-inputs`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1192,7 +1253,7 @@ export const crmApi = {
     },
 
     async fetchAiSalesSummary(token, leadId) {
-        const response = await fetch(`${BASE_URL}/admin/ai/sales/summary/${leadId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/sales/summary/${leadId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -1201,14 +1262,14 @@ export const crmApi = {
     async fetchAiSalesRecommendations(token, params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${BASE_URL}/admin/ai/sales/recommendations${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateAiRecommendation(token, id, data) {
-        const response = await fetch(`${BASE_URL}/admin/ai/sales/recommendations/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/sales/recommendations/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1220,7 +1281,7 @@ export const crmApi = {
     },
 
     async fetchAiSalesMetrics(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/sales/metrics`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/sales/metrics`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -1230,14 +1291,14 @@ export const crmApi = {
     // AI Customer Hunter API (Prompt 8)
     // -------------------------------------------------------------
     async fetchHunterStatus(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/status`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/status`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async startHunterRun(token, payload = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/start`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/start`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1249,7 +1310,7 @@ export const crmApi = {
     },
 
     async pauseHunter(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/pause`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/pause`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1257,7 +1318,7 @@ export const crmApi = {
     },
 
     async resumeHunter(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/resume`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/resume`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1265,7 +1326,7 @@ export const crmApi = {
     },
 
     async stopHunter(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/stop`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/stop`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1273,21 +1334,21 @@ export const crmApi = {
     },
 
     async fetchHunterSources(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchHunterSource(token, sourceId) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async testHunterSource(token, sourceId) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/test`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/test`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1295,7 +1356,7 @@ export const crmApi = {
     },
 
     async runHunterSource(token, sourceId, options = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/run`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/run`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1307,7 +1368,7 @@ export const crmApi = {
     },
 
     async runAllHunterSources(token, options = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources/run-all`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources/run-all`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1319,7 +1380,7 @@ export const crmApi = {
     },
 
     async updateHunterSourceConfig(token, sourceId, updates = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1331,14 +1392,14 @@ export const crmApi = {
     },
 
     async fetchHunterSourceHealth(token, sourceId) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/health`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/health`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchHunterSourceStats(token, sourceId) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/stats`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/sources/${sourceId}/stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -1347,7 +1408,7 @@ export const crmApi = {
     async fetchHunterSignals(token, params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${BASE_URL}/admin/ai/hunter/signals${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
@@ -1356,21 +1417,21 @@ export const crmApi = {
     async fetchHunterOpportunities(token, params = {}) {
         const query = new URLSearchParams(params).toString();
         const url = `${BASE_URL}/admin/ai/hunter/opportunities${query ? `?${query}` : ''}`;
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchHunterOpportunity(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateHunterOpportunity(token, id, data) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1382,7 +1443,7 @@ export const crmApi = {
     },
 
     async approveHunterOpportunity(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/approve`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/approve`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1390,7 +1451,7 @@ export const crmApi = {
     },
 
     async rejectHunterOpportunity(token, id, reason = '') {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/reject`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/reject`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1402,7 +1463,7 @@ export const crmApi = {
     },
 
     async duplicateHunterOpportunity(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/duplicate`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/duplicate`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1410,7 +1471,7 @@ export const crmApi = {
     },
 
     async convertHunterOpportunityToLead(token, id, leadData = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/convert-to-lead`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/convert-to-lead`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1422,21 +1483,21 @@ export const crmApi = {
     },
 
     async fetchHunterAnalytics(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/analytics`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/analytics`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async fetchHunterConfig(token) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/config`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/config`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async updateHunterConfig(token, updates) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/config`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/config`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1449,14 +1510,14 @@ export const crmApi = {
 
     // Prompt 9.8: Contactability Layer API
     async fetchOpportunityContactability(token, id) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
     },
 
     async discoverContactRoutes(token, id, options = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability/discover`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability/discover`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1468,7 +1529,7 @@ export const crmApi = {
     },
 
     async addManualContactRoute(token, id, routeData) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability/add-route`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability/add-route`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1480,7 +1541,7 @@ export const crmApi = {
     },
 
     async verifyContactRoute(token, id, routeIndex, verificationData = {}) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability/routes/${routeIndex}/verify`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contactability/routes/${routeIndex}/verify`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -1492,7 +1553,7 @@ export const crmApi = {
     },
 
     async recordContactOutcome(token, id, outcomeData) {
-        const response = await fetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contact-outcome`, {
+        const response = await apiFetch(`${BASE_URL}/admin/ai/hunter/opportunities/${id}/contact-outcome`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1501,6 +1562,19 @@ export const crmApi = {
             body: JSON.stringify(outcomeData)
         });
         return handleResponse(response);
+    },
+
+    async checkBackendReadiness() {
+        try {
+            const response = await apiFetch(`${BASE_URL}/ready`, { timeoutMs: 15000 });
+            if (response.ok) {
+                const data = await response.json();
+                return { isReady: data.status === 'READY', status: data.status, database: data.database };
+            }
+            return { isReady: false, status: 'NOT_READY' };
+        } catch {
+            return { isReady: false, status: 'UNREACHABLE' };
+        }
     }
 };
 

@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AssistantMessageList from './AssistantMessageList';
 import AssistantInput from './AssistantInput';
 import { getAttribution } from '../../utils/attribution';
+import { BASE_URL } from '../../../constants/crm';
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = BASE_URL;
 
 export default function CustomerAssistant({ isOpen, onClose }) {
     const [sessionId, setSessionId] = useState(null);

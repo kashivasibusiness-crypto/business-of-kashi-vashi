@@ -229,7 +229,7 @@ async function runValidation() {
     }
 
     // ------------------------------------------------------------------
-    // Test 9: Production CORS guarantees official domain
+    // Test 9: Production CORS guarantees exact deployed production origin
     // ------------------------------------------------------------------
     try {
         const res = testValidation({
@@ -241,10 +241,11 @@ async function runValidation() {
             MANAGER_INITIAL_PASSWORD: 'SecureInitialManagerPassword2026!'
         });
         const origins = res.envResult?.allowedOrigins || [];
-        const hasOfficial = origins.includes('https://varanasiyatra.com') && origins.includes('https://www.varanasiyatra.com');
-        recordTest(9, 'Production CORS guarantees official domain', hasOfficial, 'Contains https://varanasiyatra.com and https://www.varanasiyatra.com');
+        const hasDeployed = origins.includes('https://varanasi-yatra.vercel.app');
+        const excludesUnconfirmed = !origins.includes('https://admin.varanasiyatra.com');
+        recordTest(9, 'Production CORS guarantees deployed origin', hasDeployed && excludesUnconfirmed, 'Contains exact https://varanasi-yatra.vercel.app without unconfirmed subdomains');
     } catch (e) {
-        recordTest(9, 'Production CORS guarantees official domain', false, e.message);
+        recordTest(9, 'Production CORS guarantees deployed origin', false, e.message);
     }
 
     // ------------------------------------------------------------------

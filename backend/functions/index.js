@@ -11,7 +11,7 @@ const helmet = require('helmet');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
 
-const { validateEnvironment } = require('./config/env');
+const { validateEnvironment, isOriginAllowed } = require('./config/env');
 const { connectDatabase } = require('./config/database');
 const { requestLogger } = require('./middleware/productionLogger');
 const healthRoutes = require('./routes/healthRoutes');
@@ -61,12 +61,13 @@ app.use(helmet({
 
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin && (env.allowedOrigins.includes(origin) || (!env.isProduction && !env.isStaging))) {
+    const allowed = origin && isOriginAllowed(origin, env);
+    if (allowed) {
         res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-Trace-ID');
 
     // Extra HTTP Security Headers
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -78,6 +79,9 @@ app.use((req, res, next) => {
     }
 
     if (req.method === 'OPTIONS') {
+        if (origin && !allowed) {
+            return res.status(403).json({ success: false, message: `CORS policy violation: Origin '${origin}' is not authorized.` });
+        }
         return res.status(204).end();
     }
     next();

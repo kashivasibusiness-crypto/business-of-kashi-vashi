@@ -53,15 +53,9 @@ function validateEnvironment(customEnv = null) {
         }
     }
 
-    // 4. Allowed Origins
+    // 4. Allowed Origins (Strict Allowlist — No Arbitrary Regex)
     const productionDomainOrigins = [
-        'https://varanasiyatra.com',
-        'https://www.varanasiyatra.com',
-        'https://admin.varanasiyatra.com',
-        'https://varanasi-yatra.vercel.app',
-        'https://varanasiyatra-5z9orkhkw-avaneesh-kumars-projects-a6a2b18d.vercel.app',
-        'https://varanasiyatra-q1e1vq4op-avaneesh-kumars-projects-a6a2b18d.vercel.app',
-        'https://varanasiyatra-ebji3kvne-avaneesh-kumars-projects-a6a2b18d.vercel.app'
+        'https://varanasi-yatra.vercel.app'
     ];
 
     const developmentOrigins = [
@@ -75,7 +69,7 @@ function validateEnvironment(customEnv = null) {
     let allowedOrigins;
     if (envSource.ALLOWED_ORIGINS) {
         const configured = envSource.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean);
-        allowedOrigins = Array.from(new Set([...configured, 'https://varanasiyatra.com', 'https://www.varanasiyatra.com']));
+        allowedOrigins = Array.from(new Set([...configured, ...productionDomainOrigins]));
     } else if (isProduction) {
         allowedOrigins = productionDomainOrigins;
     } else {
@@ -134,10 +128,18 @@ function validateEnvironment(customEnv = null) {
     };
 }
 
+function isOriginAllowed(origin, customEnv = null) {
+    if (!origin) return false;
+    const envObj = customEnv ? (customEnv.allowedOrigins ? customEnv : validateEnvironment(customEnv)) : env;
+    if (!envObj.isProduction && !envObj.isStaging) return true;
+    return Boolean(envObj.allowedOrigins && envObj.allowedOrigins.includes(origin));
+}
+
 const env = validateEnvironment();
 
 module.exports = {
     validateEnvironment,
     sanitizeMongoUri,
+    isOriginAllowed,
     env
 };

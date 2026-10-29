@@ -43,7 +43,7 @@ async function runTest(name, fn) {
 // 1. API URL SELECTION LOGIC UNIT TESTS
 // =========================================================================
 
-const FALLBACK_PROD_API = 'https://api-gzo7qrxiuq-uc.a.run.app';
+const FALLBACK_PROD_API = 'https://kashi-vashi-backend.onrender.com';
 
 function resolveBaseUrl(configuredApiUrl, hostname) {
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
@@ -237,9 +237,9 @@ async function main() {
         assert.strictEqual(url, 'https://custom-api.varanasiyatra.com');
     });
 
-    await runTest('4. Production hostname with missing API configuration defaults to verified Cloud Run origin - NEVER localhost and NEVER empty string', () => {
+    await runTest('4. Production hostname with missing API configuration defaults to verified Render origin - NEVER localhost and NEVER empty string', () => {
         const url = resolveBaseUrl('', 'varanasi-yatra.vercel.app');
-        assert.strictEqual(url, 'https://api-gzo7qrxiuq-uc.a.run.app', 'Must fallback to verified Cloud Run backend');
+        assert.strictEqual(url, 'https://kashi-vashi-backend.onrender.com', 'Must fallback to verified Render backend');
         assert.notStrictEqual(url, 'http://localhost:5001', 'Must not be localhost:5001');
         assert.notStrictEqual(url, '', 'Must not be empty string which triggers Vercel SPA index.html rewrite');
     });
@@ -248,7 +248,7 @@ async function main() {
     await runTest('5. src/constants/crm.js exports FALLBACK_PROD_API and uses it in BASE_URL', () => {
         const crmJsPath = path.resolve(__dirname, '../src/constants/crm.js');
         const content = fs.readFileSync(crmJsPath, 'utf8');
-        assert.ok(content.includes("export const FALLBACK_PROD_API = 'https://api-gzo7qrxiuq-uc.a.run.app'"), 'crm.js must define FALLBACK_PROD_API');
+        assert.ok(content.includes("export const FALLBACK_PROD_API = 'https://kashi-vashi-backend.onrender.com'"), 'crm.js must define FALLBACK_PROD_API');
         assert.ok(content.includes('FALLBACK_PROD_API'), 'crm.js must use FALLBACK_PROD_API as non-localhost fallback');
         assert.ok(!content.includes("isLocalhost ? 'http://localhost:5001' : ''"), 'crm.js must not fallback to empty string in production');
     });

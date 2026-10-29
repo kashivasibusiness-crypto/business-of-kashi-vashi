@@ -19,6 +19,7 @@ export default function CRMLoginScreen({ onLoginSuccess }) {
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isServerWaking, setIsServerWaking] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
@@ -143,6 +144,11 @@ export default function CRMLoginScreen({ onLoginSuccess }) {
         }
 
         setIsSubmitting(true);
+        setIsServerWaking(false);
+        const wakingTimer = setTimeout(() => {
+            setIsServerWaking(true);
+        }, 3500);
+
         try {
             const res = await crmApi.login({
                 email: email.trim(),
@@ -160,8 +166,13 @@ export default function CRMLoginScreen({ onLoginSuccess }) {
                 setErrorMsg(res.message || 'Authentication failed. Please check your credentials.');
             }
         } catch (err) {
-            setErrorMsg(err.message || 'Connection failed. Please verify the backend server.');
+            const isTimeoutOrConn = err.message?.toLowerCase().includes('timed out') || err.message?.toLowerCase().includes('waking up') || err.message?.toLowerCase().includes('failed to fetch');
+            setErrorMsg(isTimeoutOrConn
+                ? 'Server is taking longer to respond. Cloud instance may be waking from sleep — please wait a moment and try again.'
+                : (err.message || 'Connection failed. Please verify the backend server.'));
         } finally {
+            clearTimeout(wakingTimer);
+            setIsServerWaking(false);
             setIsSubmitting(false);
         }
     };
@@ -377,6 +388,12 @@ export default function CRMLoginScreen({ onLoginSuccess }) {
                     </div>
 
                     {/* Alert Messages */}
+                    {isServerWaking && (
+                        <div className="p-3 bg-amber-500/15 border border-amber-400/30 rounded-xl text-amber-200 text-xs font-medium flex items-center space-x-2 animate-pulse">
+                            <span>⏳</span>
+                            <span className="flex-1 text-left">Connecting to secure cloud server... (Instance may be waking up from sleep, please hold)</span>
+                        </div>
+                    )}
                     {errorMsg && (
                         <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-medium flex items-center space-x-2 animate-fadeIn">
                             <span>⚠️</span>
